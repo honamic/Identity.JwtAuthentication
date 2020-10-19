@@ -18,5 +18,7 @@ namespace Honamic.Identity.Jwt.Sample
 
         [Display(Name = "Remember me?")]
         public bool RememberMe { get; set; }
+        
+        public string TwoFactorRememberMeToken { get; set; }
     }
 }

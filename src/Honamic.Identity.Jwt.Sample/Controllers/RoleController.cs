@@ -13,50 +13,36 @@ namespace Honamic.Identity.Jwt.Sample.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    [Authorize( AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", Identity.Application")]
+    public class RoleController : ControllerBase
     {
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly JwtSignInManager<IdentityUser,IdentityRole> _jwtSignInManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly JwtSignInManager<IdentityUser, IdentityRole> _jwtSignInManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<AuthController> _logger;
 
-        public AuthController(SignInManager<IdentityUser> signInManager,
+        public RoleController(SignInManager<IdentityUser> signInManager,
             ILogger<AuthController> logger,
             UserManager<IdentityUser> userManager,
+            RoleManager<IdentityRole> roleManager,
             JwtSignInManager<IdentityUser, IdentityRole> jwtSignInManager)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _jwtSignInManager = jwtSignInManager;
             _signInManager = signInManager;
             _logger = logger;
         }
 
         [HttpPost("[action]")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginViewModel model)
+        public async Task<IActionResult> AddRole(string name)
         {
-            var result = await _jwtSignInManager.PasswordSignInAsync(
-                model.Email,
-                model.Password,
-                model.RememberMe,
-                lockoutOnFailure: false, 
-                model.TwoFactorRememberMeToken);
+            var result = await _roleManager.CreateAsync(new IdentityRole { Name = name });
 
             return Ok(result);
         }
 
-        [HttpGet("[action]")]
-        public IActionResult UserInfo()
-        {
-            return Ok(this.HttpContext.User.Identity.Name);
-        }
-
-        [HttpGet("[action]")]
-        [Authorize(Roles ="Admin",AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", Identity.Application")]
-        public IActionResult UserAdmin()
-        {
-            return Ok(this.HttpContext.User.Identity.Name);
-        }
 
     }
 }

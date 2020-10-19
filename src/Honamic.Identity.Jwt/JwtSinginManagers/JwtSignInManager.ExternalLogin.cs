@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Honamic.Identity.Jwt
 {
-    public partial class JwtSignInManager<TUser>
+    public partial class JwtSignInManager<TUser, TRole>
     {
         /// <summary>
         /// Signs in a user via a previously registered third party login, as an asynchronous operation.

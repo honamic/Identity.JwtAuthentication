@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Honamic.Identity.Jwt
 {
-    public partial class JwtSignInManager<TUser>
+    public partial class JwtSignInManager<TUser, TRole>
     {
 
 

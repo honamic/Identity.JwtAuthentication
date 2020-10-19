@@ -13,7 +13,7 @@ using Microsoft.Extensions.Options;
 
 namespace Honamic.Identity.Jwt
 {
-    public partial class JwtSignInManager<TUser> where TUser : class
+    public partial class JwtSignInManager<TUser, TRole> where TUser : class where TRole : class
     {
         private const string LoginProviderKey = "LoginProvider";
         private const string XsrfKey = "XsrfId";
@@ -30,11 +30,12 @@ namespace Honamic.Identity.Jwt
         /// <param name="confirmation">The <see cref="IUserConfirmation{TUser}"/> used check whether a user account is confirmed.</param>
         public JwtSignInManager(UserManager<TUser> userManager,
             IHttpContextAccessor contextAccessor,
-            IUserClaimsPrincipalFactory<TUser> claimsFactory,
+           // IUserClaimsPrincipalFactory<TUser> claimsFactory,
             IOptions<IdentityOptions> optionsAccessor,
             ILogger<SignInManager<TUser>> logger,
             IAuthenticationSchemeProvider schemes,
-            IUserConfirmation<TUser> confirmation)
+            IUserConfirmation<TUser> confirmation,
+            ITokenFactoryService<TUser, TRole> tokenFactoryService)
         {
             if (userManager == null)
             {
@@ -44,24 +45,22 @@ namespace Honamic.Identity.Jwt
             {
                 throw new ArgumentNullException(nameof(contextAccessor));
             }
-            if (claimsFactory == null)
-            {
-                throw new ArgumentNullException(nameof(claimsFactory));
-            }
+
 
             UserManager = userManager;
             _contextAccessor = contextAccessor;
-            ClaimsFactory = claimsFactory;
             Options = optionsAccessor?.Value ?? new IdentityOptions();
             Logger = logger;
             _schemes = schemes;
             _confirmation = confirmation;
+            _tokenFactoryService = tokenFactoryService;
         }
 
         private readonly IHttpContextAccessor _contextAccessor;
         private HttpContext _context;
         private IAuthenticationSchemeProvider _schemes;
         private IUserConfirmation<TUser> _confirmation;
+        private readonly ITokenFactoryService<TUser, TRole> _tokenFactoryService;
 
 
         #region Properties
@@ -79,11 +78,6 @@ namespace Honamic.Identity.Jwt
         /// The <see cref="UserManager{TUser}"/> used.
         /// </summary>
         public UserManager<TUser> UserManager { get; set; }
-
-        /// <summary>
-        /// The <see cref="IUserClaimsPrincipalFactory{TUser}"/> used.
-        /// </summary>
-        public IUserClaimsPrincipalFactory<TUser> ClaimsFactory { get; set; }
 
         /// <summary>
         /// The <see cref="IdentityOptions"/> used.
@@ -164,24 +158,17 @@ namespace Honamic.Identity.Jwt
             return (result != null && result.FindFirstValue(ClaimTypes.Name) == userId);
         }
 
-        public virtual async Task<string> SignInWithClaimsAsync(TUser user, AuthenticationProperties authenticationProperties, IEnumerable<Claim> additionalClaims)
+        public virtual async Task<string> SignInWithClaimsAsync(TUser user, AuthenticationProperties authenticationProperties,
+            IEnumerable<Claim> additionalClaims)
         {
-            var userPrincipal = await CreateUserPrincipalAsync(user);
-
-            foreach (var claim in additionalClaims)
-            {
-                userPrincipal.Identities.First().AddClaim(claim);
-            }
-
-            return JsonSerializer.Serialize(userPrincipal);
+            var userPrincipal = await _tokenFactoryService.CreateJwtTokensAsync(user, additionalClaims);
+             
+            return userPrincipal.AccessToken;
 
             //await Context.SignInAsync(IdentityConstants.ApplicationScheme,
             //    userPrincipal,
             //    authenticationProperties ?? new AuthenticationProperties());
         }
-
-        public virtual async Task<ClaimsPrincipal> CreateUserPrincipalAsync(TUser user) => await ClaimsFactory.CreateAsync(user);
-
 
         protected virtual async Task<JwtSignInResult> PreSignInCheck(TUser user)
         {

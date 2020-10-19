@@ -10,6 +10,12 @@ using Microsoft.OpenApi.Models;
 using System.IO;
 using System;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace Honamic.Identity.Jwt.Sample
 {
@@ -28,14 +34,25 @@ namespace Honamic.Identity.Jwt.Sample
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-            services.AddDefaultIdentity<IdentityUser>(options => {
-                options.SignIn.RequireConfirmedAccount = true;
-                options.Password.RequiredUniqueChars = 0;
-                options.Password.RequireDigit = false;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-            })
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            services.TryAddScoped<JwtSignInManager<IdentityUser, IdentityRole>>();
+            services.TryAddScoped<UserClaimsPrincipalFactory<IdentityUser, IdentityRole>>();
+            services.TryAddScoped<ITokenFactoryService<IdentityUser, IdentityRole>, TokenFactoryService<IdentityUser, IdentityRole>>();
+
+            services.AddIdentity<IdentityUser, IdentityRole>(options =>
+             {
+                 options.SignIn.RequireConfirmedAccount = true;
+                 options.Password.RequiredUniqueChars = 0;
+                 options.Password.RequireDigit = false;
+                 options.Password.RequireNonAlphanumeric = false;
+                 options.Password.RequireUppercase = false;
+             }).AddEntityFrameworkStores<ApplicationDbContext>()
+             .AddDefaultUI();
+
+            services.Configure<BearerTokensOptions>(options => Configuration.GetSection("BearerTokensOptions").Bind(options));
+            var bearerTokensOptions = new BearerTokensOptions();
+            Configuration.GetSection("BearerTokensOptions").Bind(bearerTokensOptions);
+
             services.AddControllers();
             services.AddRazorPages();
 
@@ -77,6 +94,50 @@ namespace Honamic.Identity.Jwt.Sample
 
             });
 
+
+            services.AddAuthentication()
+                        .AddJwtBearer(cfg =>
+                        {
+                            cfg.RequireHttpsMetadata = false;
+                            cfg.SaveToken = true;
+                            cfg.TokenValidationParameters = new TokenValidationParameters
+                            {
+                                ValidIssuer = bearerTokensOptions.Issuer,
+                                ValidAudience = bearerTokensOptions.Audience,
+                                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(bearerTokensOptions.Key)),
+                                ValidateIssuerSigningKey = true,
+                                ValidateLifetime = true,
+                                ClockSkew = TimeSpan.FromMinutes(3),
+                                ValidateIssuer = true,
+                                ValidateAudience = true,
+
+                            };
+
+                            cfg.Events = new JwtBearerEvents
+                            {
+                                OnAuthenticationFailed = context =>
+                                {
+                                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(JwtBearerEvents));
+                                    logger.LogError("Authentication failed.", context.Exception);
+                                    return Task.CompletedTask;
+                                },
+                                //OnTokenValidated = context =>
+                                //{
+                                //    var tokenValidatorService = context.HttpContext.RequestServices.GetRequiredService<ITokenValidatorService>();
+                                //    return tokenValidatorService.ValidateAsync(context);
+                                //},
+                                OnMessageReceived = context =>
+                                {
+                                    return Task.CompletedTask;
+                                },
+                                OnChallenge = context =>
+                                {
+                                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(JwtBearerEvents));
+                                    logger.LogError("OnChallenge error", context.Error, context.ErrorDescription);
+                                    return Task.CompletedTask;
+                                }
+                            };
+                        });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

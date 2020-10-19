@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Honamic.Identity.Jwt
 {
-    public partial class JwtSignInManager<TUser> where TUser : class
+    public partial class JwtSignInManager<TUser, TRole>
     {
         public virtual async Task<JwtSignInResult> PasswordSignInAsync(string userName,
             string password,

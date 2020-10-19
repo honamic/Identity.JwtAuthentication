@@ -17,6 +17,8 @@ namespace Honamic.Identity.Jwt
         public bool RequiresTwoFactor { get; protected set; }
 
         public string Token { get; set; }
+        
+        public string RefreshToken { get; set; }
 
         public string TwoFactorRememberMeToken { get; protected set; }
 
