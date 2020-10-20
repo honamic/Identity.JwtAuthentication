@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -30,7 +29,7 @@ namespace Honamic.Identity.Jwt
         /// <param name="confirmation">The <see cref="IUserConfirmation{TUser}"/> used check whether a user account is confirmed.</param>
         public JwtSignInManager(UserManager<TUser> userManager,
             IHttpContextAccessor contextAccessor,
-           // IUserClaimsPrincipalFactory<TUser> claimsFactory,
+            // IUserClaimsPrincipalFactory<TUser> claimsFactory,
             IOptions<IdentityOptions> optionsAccessor,
             ILogger<SignInManager<TUser>> logger,
             IAuthenticationSchemeProvider schemes,
@@ -162,7 +161,7 @@ namespace Honamic.Identity.Jwt
             IEnumerable<Claim> additionalClaims)
         {
             var userPrincipal = await _tokenFactoryService.CreateJwtTokensAsync(user, additionalClaims);
-             
+
             return userPrincipal.AccessToken;
 
             //await Context.SignInAsync(IdentityConstants.ApplicationScheme,
@@ -261,19 +260,20 @@ namespace Honamic.Identity.Jwt
         /// <param name="principal">The principal whose stamp should be validated.</param>
         /// <returns>The task object representing the asynchronous operation. The task will contain the <typeparamref name="TUser"/>
         /// if the stamp matches the persisted value, otherwise it will return false.</returns>
-        public virtual async Task<TUser> ValidateSecurityStampAsync(ClaimsPrincipal principal)
+        public virtual async Task ValidateSecurityStampAsync(TokenValidatedContext context)
         {
-            if (principal == null)
+            if (context?.Principal == null)
             {
-                return null;
+                context.Fail("This token is expired. Please login again.");
             }
-            var user = await UserManager.GetUserAsync(principal);
-            if (await ValidateSecurityStampAsync(user, principal.FindFirstValue(Options.ClaimsIdentity.SecurityStampClaimType)))
+            var user = await UserManager.GetUserAsync(context.Principal);
+
+            if (await ValidateSecurityStampAsync(user, context.Principal.FindFirstValue(Options.ClaimsIdentity.SecurityStampClaimType)))
             {
-                return user;
+                return;
             }
             Logger.LogDebug(4, "Failed to validate a security stamp.");
-            return null;
+            context.Fail("Failed to validate.");
         }
 
         /// <summary>

@@ -121,11 +121,11 @@ namespace Honamic.Identity.Jwt.Sample
                                     logger.LogError("Authentication failed.", context.Exception);
                                     return Task.CompletedTask;
                                 },
-                                //OnTokenValidated = context =>
-                                //{
-                                //    var tokenValidatorService = context.HttpContext.RequestServices.GetRequiredService<ITokenValidatorService>();
-                                //    return tokenValidatorService.ValidateAsync(context);
-                                //},
+                                OnTokenValidated = context =>
+                                {
+                                    var JwtSignInManager = context.HttpContext.RequestServices.GetRequiredService<JwtSignInManager<IdentityUser, IdentityRole>>();
+                                    return JwtSignInManager.ValidateSecurityStampAsync(context);
+                                },
                                 OnMessageReceived = context =>
                                 {
                                     return Task.CompletedTask;

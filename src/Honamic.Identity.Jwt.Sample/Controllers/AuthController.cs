@@ -46,6 +46,7 @@ namespace Honamic.Identity.Jwt.Sample.Controllers
         }
 
         [HttpGet("[action]")]
+        [Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme )]
         public IActionResult UserInfo()
         {
             return Ok(this.HttpContext.User.Identity.Name);
