@@ -35,9 +35,9 @@ namespace Honamic.Identity.Jwt.Sample
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
 
-            services.TryAddScoped<JwtSignInManager<IdentityUser, IdentityRole>>();
+            services.TryAddScoped<JwtSignInManager<IdentityUser>>();
             services.TryAddScoped<UserClaimsPrincipalFactory<IdentityUser, IdentityRole>>();
-            services.TryAddScoped<ITokenFactoryService<IdentityUser, IdentityRole>, TokenFactoryService<IdentityUser, IdentityRole>>();
+            services.TryAddScoped<ITokenFactoryService<IdentityUser>, TokenFactoryService<IdentityUser>>();
 
             services.AddIdentity<IdentityUser, IdentityRole>(options =>
              {
@@ -125,7 +125,7 @@ namespace Honamic.Identity.Jwt.Sample
                                 },
                                 OnTokenValidated = context =>
                                 {
-                                    var JwtSignInManager = context.HttpContext.RequestServices.GetRequiredService<JwtSignInManager<IdentityUser, IdentityRole>>();
+                                    var JwtSignInManager = context.HttpContext.RequestServices.GetRequiredService<JwtSignInManager<IdentityUser>>();
                                     return JwtSignInManager.ValidateSecurityStampAsync(context);
                                 },
                                 OnMessageReceived = context =>
@@ -169,7 +169,7 @@ namespace Honamic.Identity.Jwt.Sample
                      {
                          return Task.CompletedTask;
 
-                         var JwtSignInManager = context.HttpContext.RequestServices.GetRequiredService<JwtSignInManager<IdentityUser, IdentityRole>>();
+                         var JwtSignInManager = context.HttpContext.RequestServices.GetRequiredService<JwtSignInManager<IdentityUser>>();
                          return JwtSignInManager.ValidateSecurityStampAsync(context);
                      },
                      OnMessageReceived = context =>

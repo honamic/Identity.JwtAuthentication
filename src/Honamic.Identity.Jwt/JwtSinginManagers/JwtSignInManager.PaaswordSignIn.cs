@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Honamic.Identity.Jwt
 {
-    public partial class JwtSignInManager<TUser, TRole>
+    public partial class JwtSignInManager<TUser>
     {
         public virtual async Task<JwtSignInResult> PasswordSignInAsync(string userName,
             string password,
@@ -20,12 +20,14 @@ namespace Honamic.Identity.Jwt
                 return JwtSignInResult.Failed;
             }
 
-
             var attempt = await CheckPasswordSignInAsync(user, password, lockoutOnFailure, twoFactorRememberMeToken);
 
-            return attempt.Succeeded
-                ? await SignInOrTwoFactorAsync(user, isPersistent, twoFactorRememberMeToken: twoFactorRememberMeToken)
-                : attempt;
+            if (!attempt.Succeeded)
+            {
+                return attempt;
+            }
+
+            return await SignInOrTwoFactorAsync(user, isPersistent, twoFactorRememberMeToken: twoFactorRememberMeToken);
         }
 
         public virtual async Task<JwtSignInResult> CheckPasswordSignInAsync(TUser user, string password, bool lockoutOnFailure, string twoFactorRememberMeToken)
@@ -51,7 +53,7 @@ namespace Honamic.Identity.Jwt
                     await ResetLockout(user);
                 }
 
-                return JwtSignInResult.Success(null);
+                return JwtSignInResult.Success(null, null);
             }
 
             Logger.LogWarning(2, "User failed to provide the correct password.");

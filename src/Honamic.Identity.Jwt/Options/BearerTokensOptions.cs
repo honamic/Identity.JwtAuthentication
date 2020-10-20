@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Honamic.Identity.Jwt
+﻿namespace Honamic.Identity.Jwt
 {
     public class BearerTokensOptions
     {
@@ -22,9 +18,5 @@ namespace Honamic.Identity.Jwt
         public int MfaTokenExpirationMinutes { set; get; }
 
         public int RefreshTokenExpirationMinutes { get; set; }
-
-        public bool AllowMultipleLoginsFromTheSameUser { set; get; }
-
-        public bool AllowSignoutAllUserActiveClients { set; get; }
     }
 }

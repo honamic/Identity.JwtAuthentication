@@ -8,10 +8,8 @@ using System;
 
 namespace Honamic.Identity.Jwt
 {
-    public partial class JwtSignInManager<TUser, TRole>
+    public partial class JwtSignInManager<TUser>
     {
-
-
         public virtual async Task<JwtSignInResult> TwoFactorAuthenticatorSignInAsync(string code, bool rememberClient = false)
         {
             if (rememberClient)
@@ -24,6 +22,7 @@ namespace Honamic.Identity.Jwt
             {
                 return JwtSignInResult.Failed;
             }
+
             var user = await UserManager.FindByIdAsync(twoFactorInfo.UserId);
             if (user == null)
             {
@@ -43,6 +42,7 @@ namespace Honamic.Identity.Jwt
 
             // If the token is incorrect, record the failure which also may cause the user to be locked out
             await UserManager.AccessFailedAsync(user);
+
             return JwtSignInResult.Failed;
         }
 
@@ -53,6 +53,7 @@ namespace Honamic.Identity.Jwt
             {
                 return JwtSignInResult.Failed;
             }
+
             var user = await UserManager.FindByIdAsync(twoFactorInfo.UserId);
             if (user == null)
             {
@@ -71,7 +72,8 @@ namespace Honamic.Identity.Jwt
 
         private TwoFactorAuthenticationInfo RetrieveTwoFactorInfoAsync()
         {
-            var claimsPrincipal =  Context?.User;
+            var claimsPrincipal = Context?.User;
+
             if (claimsPrincipal != null)
             {
                 return new TwoFactorAuthenticationInfo
@@ -91,6 +93,7 @@ namespace Honamic.Identity.Jwt
             await ResetLockout(user);
 
             var claims = new List<Claim>();
+
             claims.Add(new Claim("amr", "mfa"));
 
             // Cleanup external cookie
@@ -104,7 +107,6 @@ namespace Honamic.Identity.Jwt
             // Cleanup two factor user id cookie
             //await Context.SignOutAsync(IdentityConstants.TwoFactorUserIdScheme);
 
-
             string rememberTwoFactor = null;
 
             if (rememberClient)
@@ -112,23 +114,21 @@ namespace Honamic.Identity.Jwt
                 rememberTwoFactor = await RememberTwoFactorClientAsync(user);
             }
 
-            var token = await SignInWithClaimsAsync(user, claims);
+            var tokens = await SignInWithClaimsAsync(user, claims);
 
-            return JwtSignInResult.Success(token, rememberTwoFactor);
+            return JwtSignInResult.Success(tokens.Token, tokens.RefreshToken);
         }
 
         public virtual async Task<string> RememberTwoFactorClientAsync(TUser user)
         {
-            var principal = await StoreRememberClient(user);
-
-            return JsonSerializer.Serialize(principal);
+            throw new NotSupportedException("RememberTwoFactor");
 
             //await Context.SignInAsync(IdentityConstants.TwoFactorRememberMeScheme,
             //    principal,
             //    new AuthenticationProperties { IsPersistent = true });
         }
 
-        public virtual async Task<JwtSignInResult> TwoFactorSignInAsync(string provider, string code, bool rememberClient=false)
+        public virtual async Task<JwtSignInResult> TwoFactorSignInAsync(string provider, string code, bool rememberClient = false)
         {
             if (rememberClient)
             {
@@ -163,7 +163,7 @@ namespace Honamic.Identity.Jwt
         public virtual async Task<TUser> GetTwoFactorAuthenticationUserAsync()
         {
             var info = RetrieveTwoFactorInfoAsync();
-            
+
             if (info == null)
             {
                 return null;

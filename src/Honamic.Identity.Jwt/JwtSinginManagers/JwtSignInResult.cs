@@ -16,20 +16,15 @@ namespace Honamic.Identity.Jwt
 
         public bool RequiresTwoFactor { get; protected set; }
 
-        public string Token { get; set; }
-        
-        public string RefreshToken { get; set; }
+        public string Token { get; protected set; }
 
-        public string TwoFactorRememberMeToken { get; protected set; }
+        public string RefreshToken { get; protected set; }
 
-        public string TwoFactorStepOneToken { get; protected set; }
+        public string TwoFactorToken { get; protected set; }
 
-        public string ExternalProviderToken { get; protected set; }
-
-
-        public static JwtSignInResult Success(string token, string twoFactorRememberMeToken=null)
+        public static JwtSignInResult Success(string token, string refreshToken)
         {
-            return new JwtSignInResult { Succeeded = true, Token = token, TwoFactorRememberMeToken= twoFactorRememberMeToken };
+            return new JwtSignInResult { Succeeded = true, Token = token, RefreshToken = refreshToken };
         }
 
         public static JwtSignInResult Failed => _failed;
@@ -38,9 +33,9 @@ namespace Honamic.Identity.Jwt
 
         public static JwtSignInResult NotAllowed => _notAllowed;
 
-        public static JwtSignInResult TwoFactorRequired(string twoFactorStepOneToken)
+        public static JwtSignInResult TwoFactorRequired(string twoFactorToken)
         {
-            return new JwtSignInResult { RequiresTwoFactor = true, TwoFactorStepOneToken = twoFactorStepOneToken };
+            return new JwtSignInResult { RequiresTwoFactor = true, TwoFactorToken = twoFactorToken };
         }
 
 

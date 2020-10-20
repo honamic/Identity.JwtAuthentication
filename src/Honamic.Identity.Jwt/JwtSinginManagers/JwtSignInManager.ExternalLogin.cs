@@ -8,8 +8,11 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Honamic.Identity.Jwt
 {
-    public partial class JwtSignInManager<TUser, TRole>
+    public partial class JwtSignInManager<TUser>
     {
+        private const string LoginProviderKey = "LoginProvider";
+        private const string XsrfKey = "XsrfId";
+
         /// <summary>
         /// Signs in a user via a previously registered third party login, as an asynchronous operation.
         /// </summary>

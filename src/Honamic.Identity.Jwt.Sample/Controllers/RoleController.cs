@@ -18,7 +18,7 @@ namespace Honamic.Identity.Jwt.Sample.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly JwtSignInManager<IdentityUser, IdentityRole> _jwtSignInManager;
+        private readonly JwtSignInManager<IdentityUser> _jwtSignInManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<AuthController> _logger;
 
@@ -26,7 +26,7 @@ namespace Honamic.Identity.Jwt.Sample.Controllers
             ILogger<AuthController> logger,
             UserManager<IdentityUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            JwtSignInManager<IdentityUser, IdentityRole> jwtSignInManager)
+            JwtSignInManager<IdentityUser> jwtSignInManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;

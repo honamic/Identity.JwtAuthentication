@@ -12,21 +12,8 @@ using Microsoft.Extensions.Options;
 
 namespace Honamic.Identity.Jwt
 {
-    public partial class JwtSignInManager<TUser, TRole> where TUser : class where TRole : class
+    public partial class JwtSignInManager<TUser> where TUser : class
     {
-        private const string LoginProviderKey = "LoginProvider";
-        private const string XsrfKey = "XsrfId";
-
-        /// <summary>
-        /// Creates a new instance of <see cref="SignInManager{TUser}"/>.
-        /// </summary>
-        /// <param name="userManager">An instance of <see cref="UserManager"/> used to retrieve users from and persist users.</param>
-        /// <param name="contextAccessor">The accessor used to access the <see cref="HttpContext"/>.</param>
-        /// <param name="claimsFactory">The factory to use to create claims principals for a user.</param>
-        /// <param name="optionsAccessor">The accessor used to access the <see cref="IdentityOptions"/>.</param>
-        /// <param name="logger">The logger used to log messages, warnings and errors.</param>
-        /// <param name="schemes">The scheme provider that is used enumerate the authentication schemes.</param>
-        /// <param name="confirmation">The <see cref="IUserConfirmation{TUser}"/> used check whether a user account is confirmed.</param>
         public JwtSignInManager(UserManager<TUser> userManager,
             IHttpContextAccessor contextAccessor,
             // IUserClaimsPrincipalFactory<TUser> claimsFactory,
@@ -34,7 +21,7 @@ namespace Honamic.Identity.Jwt
             ILogger<SignInManager<TUser>> logger,
             IAuthenticationSchemeProvider schemes,
             IUserConfirmation<TUser> confirmation,
-            ITokenFactoryService<TUser, TRole> tokenFactoryService)
+            ITokenFactoryService<TUser> tokenFactoryService)
         {
             if (userManager == null)
             {
@@ -47,45 +34,29 @@ namespace Honamic.Identity.Jwt
 
 
             UserManager = userManager;
-            _contextAccessor = contextAccessor;
             Options = optionsAccessor?.Value ?? new IdentityOptions();
             Logger = logger;
             _schemes = schemes;
             _confirmation = confirmation;
             _tokenFactoryService = tokenFactoryService;
+            _contextAccessor = contextAccessor;
         }
 
         private readonly IHttpContextAccessor _contextAccessor;
         private HttpContext _context;
         private IAuthenticationSchemeProvider _schemes;
         private IUserConfirmation<TUser> _confirmation;
-        private readonly ITokenFactoryService<TUser, TRole> _tokenFactoryService;
+        private readonly ITokenFactoryService<TUser> _tokenFactoryService;
 
 
         #region Properties
 
-
-        /// <summary>
-        /// Gets the <see cref="ILogger"/> used to log messages from the manager.
-        /// </summary>
-        /// <value>
-        /// The <see cref="ILogger"/> used to log messages from the manager.
-        /// </value>
         public virtual ILogger Logger { get; set; }
 
-        /// <summary>
-        /// The <see cref="UserManager{TUser}"/> used.
-        /// </summary>
         public UserManager<TUser> UserManager { get; set; }
 
-        /// <summary>
-        /// The <see cref="IdentityOptions"/> used.
-        /// </summary>
         public IdentityOptions Options { get; set; }
 
-        /// <summary>
-        /// The <see cref="HttpContext"/> used.
-        /// </summary>
         public HttpContext Context
         {
             get
@@ -128,19 +99,19 @@ namespace Honamic.Identity.Jwt
                 // await Context.SignOutAsync(IdentityConstants.ExternalScheme);
             }
 
-            string token = null;
+            (string Token, string RefreshToken) tokens;
 
             if (loginProvider == null)
             {
-                token = await SignInWithClaimsAsync(user, new Claim[] { new Claim("amr", "pwd") });
+                tokens = await SignInWithClaimsAsync(user, new Claim[] { new Claim("amr", "pwd") });
             }
             else
             {
                 IList<Claim> additionalClaims = Array.Empty<Claim>();
-                token = await SignInWithClaimsAsync(user, additionalClaims);
+                tokens = await SignInWithClaimsAsync(user, additionalClaims);
             }
 
-            return JwtSignInResult.Success(token);
+            return JwtSignInResult.Success(tokens.Token, tokens.RefreshToken);
         }
 
         private async Task<bool> IsTfaEnabled(TUser user)
@@ -152,21 +123,17 @@ namespace Honamic.Identity.Jwt
         public virtual async Task<bool> IsTwoFactorClientRememberedAsync(TUser user, string twoFactorRememberMeToken)
         {
             return false;
-             var userId = await UserManager.GetUserIdAsync(user);
-            //var result = await Context.AuthenticateAsync(IdentityConstants.TwoFactorRememberMeScheme);
-            var result = JsonSerializer.Deserialize<ClaimsPrincipal>(twoFactorRememberMeToken);
-            return (result != null && result.FindFirstValue(ClaimTypes.Name) == userId);
+
+            var userId = await UserManager.GetUserIdAsync(user);
+
+            var result = await Context.AuthenticateAsync(IdentityConstants.TwoFactorRememberMeScheme);
+
+            return (result != null && result.Principal.FindFirstValue(ClaimTypes.Name) == userId);
         }
 
-        public virtual async Task<string> SignInWithClaimsAsync(TUser user, IEnumerable<Claim> additionalClaims)
+        public virtual async Task<(string Token, string RefreshToken)> SignInWithClaimsAsync(TUser user, IEnumerable<Claim> additionalClaims)
         {
-            var userPrincipal = await _tokenFactoryService.CreateJwtTokensAsync(user, additionalClaims);
-
-            return userPrincipal.AccessToken;
-
-            //await Context.SignInAsync(IdentityConstants.ApplicationScheme,
-            //    userPrincipal,
-            //    authenticationProperties ?? new AuthenticationProperties());
+            return await _tokenFactoryService.CreateJwtTokensAsync(user, additionalClaims);
         }
 
         protected virtual async Task<JwtSignInResult> PreSignInCheck(TUser user)

@@ -16,14 +16,14 @@ namespace Honamic.Identity.Jwt.Sample.Controllers
     public class AuthController : ControllerBase
     {
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly JwtSignInManager<IdentityUser, IdentityRole> _jwtSignInManager;
+        private readonly JwtSignInManager<IdentityUser> _jwtSignInManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<AuthController> _logger;
 
         public AuthController(SignInManager<IdentityUser> signInManager,
             ILogger<AuthController> logger,
             UserManager<IdentityUser> userManager,
-            JwtSignInManager<IdentityUser, IdentityRole> jwtSignInManager)
+            JwtSignInManager<IdentityUser> jwtSignInManager)
         {
             _userManager = userManager;
             _jwtSignInManager = jwtSignInManager;
