@@ -24,6 +24,8 @@ namespace Honamic.Identity.Jwt
     {
         Task<JwtTokensData> CreateJwtTokensAsync(TUser user, IEnumerable<Claim> additionalClaims);
         string GetRefreshTokenSerial(string refreshTokenValue);
+
+        string CreateMfaTokenAsync(IEnumerable<Claim> claims);
     }
 
     public class TokenFactoryService<TUser, TRole> : ITokenFactoryService<TUser, TRole>
@@ -64,6 +66,24 @@ namespace Honamic.Identity.Jwt
                 RefreshTokenSerial = refreshTokenSerial,
                 Claims = claims
             };
+        }
+
+        public  string  CreateMfaTokenAsync( IEnumerable<Claim> claims)
+        { 
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.Key));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var now = DateTime.UtcNow;
+            var token = new JwtSecurityToken(
+                issuer: _configuration.Value.Issuer,
+                audience: _configuration.Value.Audience,
+                claims: claims,
+                notBefore: now,
+                expires: now.AddMinutes(_configuration.Value.MfaTokenExpirationMinutes),
+                signingCredentials: creds);
+
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            return tokenString;
         }
 
         private (string RefreshTokenValue, string RefreshTokenSerial) createRefreshToken()

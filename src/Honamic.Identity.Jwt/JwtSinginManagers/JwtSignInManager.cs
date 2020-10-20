@@ -117,7 +117,7 @@ namespace Honamic.Identity.Jwt
                 {
                     // Store the userId for use after two factor check
                     var userId = await UserManager.GetUserIdAsync(user);
-                    var twoFactorStepOneToken = JsonSerializer.Serialize(StoreTwoFactorInfo(userId, loginProvider));
+                    var twoFactorStepOneToken = StoreTwoFactorInfo(userId, loginProvider);
                     return JwtSignInResult.TwoFactorRequired(twoFactorStepOneToken);
                 }
             }
@@ -132,12 +132,12 @@ namespace Honamic.Identity.Jwt
 
             if (loginProvider == null)
             {
-                token = await SignInWithClaimsAsync(user, isPersistent, new Claim[] { new Claim("amr", "pwd") });
+                token = await SignInWithClaimsAsync(user, new Claim[] { new Claim("amr", "pwd") });
             }
             else
             {
                 IList<Claim> additionalClaims = Array.Empty<Claim>();
-                token = await SignInWithClaimsAsync(user, new AuthenticationProperties { IsPersistent = isPersistent }, additionalClaims);
+                token = await SignInWithClaimsAsync(user, additionalClaims);
             }
 
             return JwtSignInResult.Success(token);
@@ -151,14 +151,14 @@ namespace Honamic.Identity.Jwt
 
         public virtual async Task<bool> IsTwoFactorClientRememberedAsync(TUser user, string twoFactorRememberMeToken)
         {
-            var userId = await UserManager.GetUserIdAsync(user);
+            return false;
+             var userId = await UserManager.GetUserIdAsync(user);
             //var result = await Context.AuthenticateAsync(IdentityConstants.TwoFactorRememberMeScheme);
             var result = JsonSerializer.Deserialize<ClaimsPrincipal>(twoFactorRememberMeToken);
             return (result != null && result.FindFirstValue(ClaimTypes.Name) == userId);
         }
 
-        public virtual async Task<string> SignInWithClaimsAsync(TUser user, AuthenticationProperties authenticationProperties,
-            IEnumerable<Claim> additionalClaims)
+        public virtual async Task<string> SignInWithClaimsAsync(TUser user, IEnumerable<Claim> additionalClaims)
         {
             var userPrincipal = await _tokenFactoryService.CreateJwtTokensAsync(user, additionalClaims);
 
@@ -231,27 +231,21 @@ namespace Honamic.Identity.Jwt
             //await Context.SignOutAsync(IdentityConstants.TwoFactorUserIdScheme);
         }
 
-        internal ClaimsPrincipal StoreTwoFactorInfo(string userId, string loginProvider)
+        internal string StoreTwoFactorInfo(string userId, string loginProvider)
         {
-            var identity = new ClaimsIdentity(IdentityConstants.TwoFactorUserIdScheme);
-            identity.AddClaim(new Claim(ClaimTypes.Name, userId));
+            var additionalClaims = new List<Claim>();
+
+            additionalClaims.Add(new Claim(ClaimTypes.Name, userId));
+
             if (loginProvider != null)
             {
-                identity.AddClaim(new Claim(ClaimTypes.AuthenticationMethod, loginProvider));
+                additionalClaims.Add(new Claim(ClaimTypes.AuthenticationMethod, loginProvider));
             }
-            return new ClaimsPrincipal(identity);
+
+            return _tokenFactoryService.CreateMfaTokenAsync(additionalClaims);
         }
 
 
-        /// <summary>
-        /// Signs in the specified <paramref name="user"/>.
-        /// </summary>
-        /// <param name="user">The user to sign-in.</param>
-        /// <param name="isPersistent">Flag indicating whether the sign-in cookie should persist after the browser is closed.</param>
-        /// <param name="additionalClaims">Additional claims that will be stored in the cookie.</param>
-        /// <returns>The task object representing the asynchronous operation.</returns>
-        public virtual Task<string> SignInWithClaimsAsync(TUser user, bool isPersistent, IEnumerable<Claim> additionalClaims)
-            => SignInWithClaimsAsync(user, new AuthenticationProperties { IsPersistent = isPersistent }, additionalClaims);
 
         /// <summary>
         /// Validates the security stamp for the specified <paramref name="principal"/> against

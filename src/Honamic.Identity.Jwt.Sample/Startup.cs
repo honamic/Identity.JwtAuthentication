@@ -46,8 +46,10 @@ namespace Honamic.Identity.Jwt.Sample
                  options.Password.RequireDigit = false;
                  options.Password.RequireNonAlphanumeric = false;
                  options.Password.RequireUppercase = false;
-             }).AddEntityFrameworkStores<ApplicationDbContext>()
-             .AddDefaultUI();
+             })
+              .AddEntityFrameworkStores<ApplicationDbContext>()
+             .AddDefaultUI()
+             .AddDefaultTokenProviders();
 
             services.Configure<BearerTokensOptions>(options => Configuration.GetSection("BearerTokensOptions").Bind(options));
             var bearerTokensOptions = new BearerTokensOptions();
@@ -137,7 +139,51 @@ namespace Honamic.Identity.Jwt.Sample
                                     return Task.CompletedTask;
                                 }
                             };
-                        });
+                        })
+            .AddJwtBearer("bearer.mfa",cfg =>
+             {
+                 cfg.RequireHttpsMetadata = false;
+                 cfg.SaveToken = true;
+                 cfg.TokenValidationParameters = new TokenValidationParameters
+                 {
+                     ValidIssuer = bearerTokensOptions.Issuer,
+                     ValidAudience = bearerTokensOptions.Audience,
+                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(bearerTokensOptions.Key)),
+                     ValidateIssuerSigningKey = true,
+                     ValidateLifetime = true,
+                     ClockSkew = TimeSpan.FromMinutes(1),
+                     ValidateIssuer = true,
+                     ValidateAudience = true,
+
+                 };
+
+                 cfg.Events = new JwtBearerEvents
+                 {
+                     OnAuthenticationFailed = context =>
+                     {
+                         var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(JwtBearerEvents));
+                         logger.LogError("Authentication failed.", context.Exception);
+                         return Task.CompletedTask;
+                     },
+                     OnTokenValidated = context =>
+                     {
+                         return Task.CompletedTask;
+
+                         var JwtSignInManager = context.HttpContext.RequestServices.GetRequiredService<JwtSignInManager<IdentityUser, IdentityRole>>();
+                         return JwtSignInManager.ValidateSecurityStampAsync(context);
+                     },
+                     OnMessageReceived = context =>
+                     {
+                         return Task.CompletedTask;
+                     },
+                     OnChallenge = context =>
+                     {
+                         var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(JwtBearerEvents));
+                         logger.LogError("OnChallenge error", context.Error, context.ErrorDescription);
+                         return Task.CompletedTask;
+                     }
+                 };
+             });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

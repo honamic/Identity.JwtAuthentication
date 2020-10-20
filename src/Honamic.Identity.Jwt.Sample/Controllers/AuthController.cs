@@ -16,7 +16,7 @@ namespace Honamic.Identity.Jwt.Sample.Controllers
     public class AuthController : ControllerBase
     {
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly JwtSignInManager<IdentityUser,IdentityRole> _jwtSignInManager;
+        private readonly JwtSignInManager<IdentityUser, IdentityRole> _jwtSignInManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<AuthController> _logger;
 
@@ -39,25 +39,66 @@ namespace Honamic.Identity.Jwt.Sample.Controllers
                 model.Email,
                 model.Password,
                 model.RememberMe,
-                lockoutOnFailure: false, 
+                lockoutOnFailure: false,
                 model.TwoFactorRememberMeToken);
 
             return Ok(result);
         }
 
         [HttpGet("[action]")]
-        [Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme )]
+        [Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public IActionResult UserInfo()
         {
             return Ok(this.HttpContext.User.Identity.Name);
         }
 
         [HttpGet("[action]")]
-        [Authorize(Roles ="Admin",AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", Identity.Application")]
+        [Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", Identity.Application")]
         public IActionResult UserAdmin()
         {
             return Ok(this.HttpContext.User.Identity.Name);
         }
 
+        [HttpGet("[action]")]
+        [Authorize(AuthenticationSchemes = "bearer.mfa")]
+        public async Task<IActionResult> TwoFactorProviders()
+        {
+            var user = await _jwtSignInManager.GetTwoFactorAuthenticationUserAsync();
+
+            if (user != null)
+            {
+                var list = await _userManager.GetValidTwoFactorProvidersAsync(user);
+
+                return Ok(list);
+            }
+
+            return Unauthorized();
+        }
+
+        [HttpGet("[action]")]
+        [Authorize(AuthenticationSchemes = "bearer.mfa")]
+        public async Task<IActionResult> SendCode(string provider)
+        {
+            var user = await _jwtSignInManager.GetTwoFactorAuthenticationUserAsync();
+
+            var code = await _userManager.GenerateTwoFactorTokenAsync(user, provider);
+
+            if (code != null)
+            {
+
+                return Ok(code);
+            }
+
+            return NotFound();
+        }
+
+        [HttpGet("[action]")]
+        [Authorize(AuthenticationSchemes = "bearer.mfa")]
+        public async Task<IActionResult> TwoFactorSignIn(string provider, string code)
+        {
+            var result = await _jwtSignInManager.TwoFactorSignInAsync(provider, code, false);
+             
+            return Ok(result);
+        }
     }
 }

@@ -3,6 +3,8 @@ using System.Text.Json;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
+using System.Linq;
+using System;
 
 namespace Honamic.Identity.Jwt
 {
@@ -10,9 +12,14 @@ namespace Honamic.Identity.Jwt
     {
 
 
-        public virtual async Task<JwtSignInResult> TwoFactorAuthenticatorSignInAsync(string code, bool isPersistent, bool rememberClient, string twoFactorStepOneToken)
+        public virtual async Task<JwtSignInResult> TwoFactorAuthenticatorSignInAsync(string code, bool rememberClient = false)
         {
-            var twoFactorInfo = RetrieveTwoFactorInfoAsync(twoFactorStepOneToken);
+            if (rememberClient)
+            {
+                throw new NotSupportedException(nameof(rememberClient));
+            }
+
+            var twoFactorInfo = RetrieveTwoFactorInfoAsync();
             if (twoFactorInfo == null || twoFactorInfo.UserId == null)
             {
                 return JwtSignInResult.Failed;
@@ -31,7 +38,7 @@ namespace Honamic.Identity.Jwt
 
             if (await UserManager.VerifyTwoFactorTokenAsync(user, Options.Tokens.AuthenticatorTokenProvider, code))
             {
-                return await DoTwoFactorSignInAsync(user, twoFactorInfo, isPersistent, rememberClient);
+                return await DoTwoFactorSignInAsync(user, twoFactorInfo, rememberClient);
             }
 
             // If the token is incorrect, record the failure which also may cause the user to be locked out
@@ -39,12 +46,9 @@ namespace Honamic.Identity.Jwt
             return JwtSignInResult.Failed;
         }
 
-
-
-
-        public virtual async Task<JwtSignInResult> TwoFactorRecoveryCodeSignInAsync(string recoveryCode, string twoFactorStepOneToken)
+        public virtual async Task<JwtSignInResult> TwoFactorRecoveryCodeSignInAsync(string recoveryCode)
         {
-            var twoFactorInfo = RetrieveTwoFactorInfoAsync(twoFactorStepOneToken);
+            var twoFactorInfo = RetrieveTwoFactorInfoAsync();
             if (twoFactorInfo == null || twoFactorInfo.UserId == null)
             {
                 return JwtSignInResult.Failed;
@@ -58,29 +62,30 @@ namespace Honamic.Identity.Jwt
             var result = await UserManager.RedeemTwoFactorRecoveryCodeAsync(user, recoveryCode);
             if (result.Succeeded)
             {
-                return await DoTwoFactorSignInAsync(user, twoFactorInfo, isPersistent: false, rememberClient: false);
+                return await DoTwoFactorSignInAsync(user, twoFactorInfo, rememberClient: false);
             }
 
             // We don't protect against brute force attacks since codes are expected to be random.
             return JwtSignInResult.Failed;
         }
 
-        private TwoFactorAuthenticationInfo RetrieveTwoFactorInfoAsync(string twoFactorStepOneToken)
+        private TwoFactorAuthenticationInfo RetrieveTwoFactorInfoAsync()
         {
-            var result = JsonSerializer.Deserialize<ClaimsPrincipal>(twoFactorStepOneToken);
-            if (result != null)
+            var claimsPrincipal =  Context?.User;
+            if (claimsPrincipal != null)
             {
                 return new TwoFactorAuthenticationInfo
                 {
-                    UserId = result.FindFirstValue(ClaimTypes.Name),
-                    LoginProvider = result.FindFirstValue(ClaimTypes.AuthenticationMethod)
+                    UserId = claimsPrincipal.FindFirstValue(ClaimTypes.Name),
+                    LoginProvider = claimsPrincipal.FindFirstValue(ClaimTypes.AuthenticationMethod)
                 };
             }
+
             return null;
         }
 
 
-        private async Task<JwtSignInResult> DoTwoFactorSignInAsync(TUser user, TwoFactorAuthenticationInfo twoFactorInfo, bool isPersistent, bool rememberClient)
+        private async Task<JwtSignInResult> DoTwoFactorSignInAsync(TUser user, TwoFactorAuthenticationInfo twoFactorInfo, bool rememberClient)
         {
             // When token is verified correctly, clear the access failed count used for lockout
             await ResetLockout(user);
@@ -107,7 +112,7 @@ namespace Honamic.Identity.Jwt
                 rememberTwoFactor = await RememberTwoFactorClientAsync(user);
             }
 
-            var token = await SignInWithClaimsAsync(user, isPersistent, claims);
+            var token = await SignInWithClaimsAsync(user, claims);
 
             return JwtSignInResult.Success(token, rememberTwoFactor);
         }
@@ -123,9 +128,14 @@ namespace Honamic.Identity.Jwt
             //    new AuthenticationProperties { IsPersistent = true });
         }
 
-        public virtual async Task<JwtSignInResult> TwoFactorSignInAsync(string provider, string code, bool isPersistent, bool rememberClient, string twoFactorStepOneToken)
+        public virtual async Task<JwtSignInResult> TwoFactorSignInAsync(string provider, string code, bool rememberClient=false)
         {
-            var twoFactorInfo = RetrieveTwoFactorInfoAsync(twoFactorStepOneToken);
+            if (rememberClient)
+            {
+                throw new NotSupportedException(nameof(rememberClient));
+            }
+
+            var twoFactorInfo = RetrieveTwoFactorInfoAsync();
             if (twoFactorInfo == null || twoFactorInfo.UserId == null)
             {
                 return JwtSignInResult.Failed;
@@ -143,16 +153,16 @@ namespace Honamic.Identity.Jwt
             }
             if (await UserManager.VerifyTwoFactorTokenAsync(user, provider, code))
             {
-                return await DoTwoFactorSignInAsync(user, twoFactorInfo, isPersistent, rememberClient);
+                return await DoTwoFactorSignInAsync(user, twoFactorInfo, rememberClient);
             }
             // If the token is incorrect, record the failure which also may cause the user to be locked out
             await UserManager.AccessFailedAsync(user);
             return JwtSignInResult.Failed;
         }
 
-        public virtual async Task<TUser> GetTwoFactorAuthenticationUserAsync(string twoFactorStepOneToken)
+        public virtual async Task<TUser> GetTwoFactorAuthenticationUserAsync()
         {
-            var info = RetrieveTwoFactorInfoAsync(twoFactorStepOneToken);
+            var info = RetrieveTwoFactorInfoAsync();
             
             if (info == null)
             {
