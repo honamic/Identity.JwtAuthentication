@@ -17,14 +17,14 @@ namespace Honamic.Identity.JwtAuthentication
         #region ctor
 
         private readonly IUserClaimsPrincipalFactory<TUser> _userClaimsPrincipalFactory;
-        private readonly IOptionsSnapshot<BearerTokensOptions> _configuration;
+        private readonly IOptionsSnapshot<JwtAuthenticationOptions> _configuration;
         private readonly IOptions<IdentityOptions> _identityOptions;
         private readonly ILogger<TokenFactoryService<TUser>> _logger;
         private readonly string _securityStampClaimType = "";
         private readonly string _userIdClaimType = "";
 
         public TokenFactoryService(IUserClaimsPrincipalFactory<TUser> userClaimsPrincipalFactory,
-            IOptionsSnapshot<BearerTokensOptions> configuration,
+            IOptionsSnapshot<JwtAuthenticationOptions> configuration,
             IOptions<IdentityOptions> identityOptions,
             ILogger<TokenFactoryService<TUser>> logger)
         {
@@ -63,6 +63,11 @@ namespace Honamic.Identity.JwtAuthentication
             return (token, refreshToken);
         }
 
+        public string CreateMfaTokenAsync(IEnumerable<Claim> claims)
+        {
+            return CreateToken(claims, _configuration.Value.MfaTokenExpirationMinutes);
+        }
+
         public (string UserId, string SecurityStamp) ValidateAndGetRefreshTokenUserIdAndSecurity(string refreshToken)
         {
             string userId = null;
@@ -86,7 +91,7 @@ namespace Honamic.Identity.JwtAuthentication
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.Key)),
                         ValidateIssuerSigningKey = true, // verify signature to avoid tampering
                         ValidateLifetime = true, // validate the expiration
-                        ClockSkew = TimeSpan.Zero // tolerance for the expiration date
+                        ClockSkew =TimeSpan.FromSeconds(_configuration.Value.ClockSkewSeconds) // tolerance for the expiration date
                     },
                     out _
                 );
@@ -101,24 +106,6 @@ namespace Honamic.Identity.JwtAuthentication
             securityStamp = decodedRefreshTokenPrincipal?.Claims?.FirstOrDefault(t => t.Type == _securityStampClaimType)?.Value;
 
             return (userId, securityStamp);
-        }
-
-        public string CreateMfaTokenAsync(IEnumerable<Claim> claims)
-        {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.Key));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var now = DateTime.UtcNow;
-            var token = new JwtSecurityToken(
-                issuer: _configuration.Value.Issuer,
-                audience: _configuration.Value.Audience,
-                claims: claims,
-                notBefore: now,
-                expires: now.AddMinutes(_configuration.Value.MfaTokenExpirationMinutes),
-                signingCredentials: creds);
-
-            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-
-            return tokenString;
         }
 
         private string CreateToken(IEnumerable<Claim> claims, int expirationMinutes)
