@@ -29,10 +29,10 @@ namespace Honamic.Identity.Jwt
     }
 
     public class TokenFactoryService<TUser, TRole> : ITokenFactoryService<TUser, TRole>
-        where TUser : IdentityUser
+        where TUser : class
         where TRole : class
     {
-        private readonly UserClaimsPrincipalFactory<TUser, TRole> _userClaimsPrincipalFactory;
+        private readonly IUserClaimsPrincipalFactory<TUser> _userClaimsPrincipalFactory;
 
         //private readonly ISecurityService _securityService;
         private readonly IOptionsSnapshot<BearerTokensOptions> _configuration;
@@ -40,7 +40,7 @@ namespace Honamic.Identity.Jwt
         private readonly ILogger<TokenFactoryService<TUser, TRole>> _logger;
 
         public TokenFactoryService(
-            UserClaimsPrincipalFactory<TUser, TRole> userClaimsPrincipalFactory,
+            IUserClaimsPrincipalFactory<TUser> userClaimsPrincipalFactory,
             //ISecurityService securityService,
             IOptionsSnapshot<BearerTokensOptions> configuration,
             IRoleStore<TRole> roleStore,
