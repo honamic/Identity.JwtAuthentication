@@ -1,12 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Honamic.Identity.Jwt.Sample.Controllers
@@ -38,9 +34,8 @@ namespace Honamic.Identity.Jwt.Sample.Controllers
             var result = await _jwtSignInManager.PasswordSignInAsync(
                 model.Email,
                 model.Password,
-                model.RememberMe,
-                lockoutOnFailure: false,
-                model.TwoFactorRememberMeToken);
+                isPersistent: false,
+                lockoutOnFailure: false);
 
             return Ok(result);
         }

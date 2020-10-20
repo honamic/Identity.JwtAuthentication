@@ -46,7 +46,7 @@ namespace Honamic.Identity.Jwt
             {
                 return error;
             }
-            return await SignInOrTwoFactorAsync(user, isPersistent, loginProvider, bypassTwoFactor);
+            return await SignInOrTwoFactorAsync(user, loginProvider, bypassTwoFactor);
         }
 
         /// <summary>

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Security.Claims;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -77,14 +76,13 @@ namespace Honamic.Identity.Jwt
         #endregion
 
 
-        protected virtual async Task<JwtSignInResult> SignInOrTwoFactorAsync(TUser user, bool isPersistent,
+        protected virtual async Task<JwtSignInResult> SignInOrTwoFactorAsync(TUser user,
             string loginProvider = null,
-            bool bypassTwoFactor = false,
-            string twoFactorRememberMeToken = null)
+            bool bypassTwoFactor = false)
         {
             if (!bypassTwoFactor && await IsTfaEnabled(user))
             {
-                if (!await IsTwoFactorClientRememberedAsync(user, twoFactorRememberMeToken))
+                if (!await IsTwoFactorClientRememberedAsync(user))
                 {
                     // Store the userId for use after two factor check
                     var userId = await UserManager.GetUserIdAsync(user);
@@ -120,7 +118,7 @@ namespace Honamic.Identity.Jwt
     (await UserManager.GetValidTwoFactorProvidersAsync(user)).Count > 0;
 
 
-        public virtual async Task<bool> IsTwoFactorClientRememberedAsync(TUser user, string twoFactorRememberMeToken)
+        public virtual async Task<bool> IsTwoFactorClientRememberedAsync(TUser user)
         {
             return false;
 
