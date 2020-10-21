@@ -54,7 +54,7 @@ namespace Honamic.Identity.JwtAuthentication
 
             var token = CreateToken(cliams, _configuration.Value.AccessTokenExpirationMinutes);
 
-            var refreshClaims = cliams.Where(t => t.Type == _userIdClaimType || t.Type == _securityStampClaimType || t.Type=="amr").ToList();
+            var refreshClaims = cliams.Where(t => t.Type == _userIdClaimType || t.Type == _securityStampClaimType || t.Type == "amr").ToList();
 
             AddIssuClaims(refreshClaims);
 
@@ -69,7 +69,7 @@ namespace Honamic.Identity.JwtAuthentication
             return CreateToken(claims, _configuration.Value.MfaTokenExpirationMinutes);
         }
 
-        public (string UserId, string SecurityStamp,string AmrCliam) ValidateAndGetRefreshTokenUserIdAndSecurity(string refreshToken)
+        public (string UserId, string SecurityStamp, string AmrCliam) ValidateAndGetRefreshTokenUserIdAndSecurity(string refreshToken)
         {
             string userId = null;
             string securityStamp = null;
@@ -93,7 +93,7 @@ namespace Honamic.Identity.JwtAuthentication
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.Key)),
                         ValidateIssuerSigningKey = true, // verify signature to avoid tampering
                         ValidateLifetime = true, // validate the expiration
-                        ClockSkew =TimeSpan.FromSeconds(_configuration.Value.ClockSkewSeconds) // tolerance for the expiration date
+                        ClockSkew = TimeSpan.FromSeconds(_configuration.Value.ClockSkewSeconds) // tolerance for the expiration date
                     },
                     out _
                 );
@@ -108,6 +108,12 @@ namespace Honamic.Identity.JwtAuthentication
             securityStamp = decodedRefreshTokenPrincipal?.Claims?.FirstOrDefault(t => t.Type == _securityStampClaimType)?.Value;
 
             amrCliam = decodedRefreshTokenPrincipal?.Claims?.FirstOrDefault(t => t.Type == "amr")?.Value;
+
+            if (amrCliam == null)
+            {
+                amrCliam = decodedRefreshTokenPrincipal?.Claims?
+                    .FirstOrDefault(t => t.Type == "http://schemas.microsoft.com/claims/authnmethodsreferences")?.Value;
+            }
 
             return (userId, securityStamp, amrCliam);
         }
