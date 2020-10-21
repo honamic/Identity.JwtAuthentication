@@ -43,5 +43,10 @@ namespace Honamic.Identity.JwtAuthentication.Sample.Controllers
             };
 
         }
+
+        protected override Task<bool> SendTwoFactureCodeAsync(IdentityUser user, string code, string provider)
+        {
+            return Task.FromResult(true);
+        }
     }
 }

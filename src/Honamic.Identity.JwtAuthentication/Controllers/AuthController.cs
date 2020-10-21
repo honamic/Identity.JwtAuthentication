@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Honamic.Identity.JwtAuthentication
 {
     [ApiController]
-    public abstract class AuthController<TUser> : ControllerBase where TUser:class
+    public abstract class AuthController<TUser> : ControllerBase where TUser : class
     {
         protected readonly UserManager<TUser> _userManager;
         protected readonly JwtSignInManager<TUser> _jwtSignInManager;
@@ -44,11 +44,11 @@ namespace Honamic.Identity.JwtAuthentication
         {
             if (model == null)
             {
-                return BadRequest("user is not set.");
+                return BadRequest("refresh token is not set.");
             }
 
             var result = await _jwtSignInManager.RefreshTokenAsync(model.RefreshToken);
- 
+
             return Ok(result);
         }
 
@@ -78,11 +78,17 @@ namespace Honamic.Identity.JwtAuthentication
 
             if (code != null)
             {
-
-                return Ok(code);
+                if (await SendTwoFactureCodeAsync(user, code, provider))
+                {
+                    return Ok();
+                }
+                else
+                {
+                    return StatusCode(500,"send code failed");
+                }
             }
 
-            return NotFound();
+            return StatusCode(500);
         }
 
         [HttpPost("[action]")]
@@ -90,8 +96,11 @@ namespace Honamic.Identity.JwtAuthentication
         public async Task<IActionResult> TwoFactorSignIn(string provider, string code)
         {
             var result = await _jwtSignInManager.TwoFactorSignInAsync(provider, code, false);
-             
+
             return Ok(result);
         }
+
+
+        protected abstract Task<bool> SendTwoFactureCodeAsync(TUser user, string code, string provider);
     }
 }
