@@ -1,12 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Honamic.Identity.JwtAuthentication.Sample.Controllers
@@ -20,10 +16,10 @@ namespace Honamic.Identity.JwtAuthentication.Sample.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly JwtSignInManager<IdentityUser> _jwtSignInManager;
         private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly ILogger<AuthController> _logger;
+        private readonly ILogger<RoleController> _logger;
 
         public RoleController(SignInManager<IdentityUser> signInManager,
-            ILogger<AuthController> logger,
+            ILogger<RoleController> logger,
             UserManager<IdentityUser> userManager,
             RoleManager<IdentityRole> roleManager,
             JwtSignInManager<IdentityUser> jwtSignInManager)

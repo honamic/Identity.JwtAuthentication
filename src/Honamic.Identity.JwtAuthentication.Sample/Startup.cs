@@ -52,9 +52,9 @@ namespace Honamic.Identity.JwtAuthentication.Sample
                    name: "BackendOpenAPISpecification",
                    info: new Microsoft.OpenApi.Models.OpenApiInfo()
                    {
-                       Title = "Identity Jwt",
+                       Title = "Jwt Authentication",
                        Version = "1",
-                       Description = "Identity jwt Sample Project"
+                       Description = "Jwt Authentication Sample Project"
                    });
 
                 setupAction.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -118,7 +118,7 @@ namespace Honamic.Identity.JwtAuthentication.Sample
                 setupAction.SwaggerEndpoint(
                     url: "/swagger/BackendOpenAPISpecification/swagger.json",
                     name: "Backend API");
-                setupAction.RoutePrefix = "swagger";
+                setupAction.RoutePrefix = "api";
             });
 
             app.UseEndpoints(endpoints =>

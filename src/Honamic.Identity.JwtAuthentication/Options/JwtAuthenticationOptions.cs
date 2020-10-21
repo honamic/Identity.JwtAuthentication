@@ -4,6 +4,8 @@ namespace Honamic.Identity.JwtAuthentication
 {
     public class JwtAuthenticationOptions
     {
+        public const string JwtBearerTwoFactorsScheme = "Bearer.Tfa";
+
         public JwtAuthenticationOptions()
         {
             MfaTokenExpirationMinutes = 3;

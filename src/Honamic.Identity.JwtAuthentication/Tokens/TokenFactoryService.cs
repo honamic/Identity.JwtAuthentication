@@ -54,11 +54,12 @@ namespace Honamic.Identity.JwtAuthentication
 
             var token = CreateToken(cliams, _configuration.Value.AccessTokenExpirationMinutes);
 
-            var refreshClaims = cliams.Where(t => t.Type == _userIdClaimType || t.Type == _securityStampClaimType).ToList();
+            var refreshClaims = cliams.Where(t => t.Type == _userIdClaimType || t.Type == _securityStampClaimType || t.Type=="amr").ToList();
 
             AddIssuClaims(refreshClaims);
 
             var refreshToken = CreateToken(refreshClaims, _configuration.Value.RefreshTokenExpirationMinutes);
+
 
             return (token, refreshToken);
         }
@@ -68,14 +69,15 @@ namespace Honamic.Identity.JwtAuthentication
             return CreateToken(claims, _configuration.Value.MfaTokenExpirationMinutes);
         }
 
-        public (string UserId, string SecurityStamp) ValidateAndGetRefreshTokenUserIdAndSecurity(string refreshToken)
+        public (string UserId, string SecurityStamp,string AmrCliam) ValidateAndGetRefreshTokenUserIdAndSecurity(string refreshToken)
         {
             string userId = null;
             string securityStamp = null;
+            string amrCliam = null;
 
             if (string.IsNullOrWhiteSpace(refreshToken))
             {
-                return (userId, securityStamp);
+                return (userId, securityStamp, amrCliam);
             }
 
             ClaimsPrincipal decodedRefreshTokenPrincipal = null;
@@ -105,7 +107,9 @@ namespace Honamic.Identity.JwtAuthentication
 
             securityStamp = decodedRefreshTokenPrincipal?.Claims?.FirstOrDefault(t => t.Type == _securityStampClaimType)?.Value;
 
-            return (userId, securityStamp);
+            amrCliam = decodedRefreshTokenPrincipal?.Claims?.FirstOrDefault(t => t.Type == "amr")?.Value;
+
+            return (userId, securityStamp, amrCliam);
         }
 
         private string CreateToken(IEnumerable<Claim> claims, int expirationMinutes)

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Honamic.Identity.JwtAuthentication.Sample
+namespace Honamic.Identity.JwtAuthentication
 {
     public class LoginViewModel
     {

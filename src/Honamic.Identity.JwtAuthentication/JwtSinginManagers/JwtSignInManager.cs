@@ -15,7 +15,6 @@ namespace Honamic.Identity.JwtAuthentication
     {
         public JwtSignInManager(UserManager<TUser> userManager,
             IHttpContextAccessor contextAccessor,
-            // IUserClaimsPrincipalFactory<TUser> claimsFactory,
             IOptions<IdentityOptions> optionsAccessor,
             ILogger<SignInManager<TUser>> logger,
             IAuthenticationSchemeProvider schemes,
@@ -117,7 +116,6 @@ namespace Honamic.Identity.JwtAuthentication
     await UserManager.GetTwoFactorEnabledAsync(user) &&
     (await UserManager.GetValidTwoFactorProvidersAsync(user)).Count > 0;
 
-
         public virtual async Task<bool> IsTwoFactorClientRememberedAsync(TUser user)
         {
             return false;
@@ -187,8 +185,10 @@ namespace Honamic.Identity.JwtAuthentication
             return Task.CompletedTask;
         }
 
-        public virtual async Task SignOutAsync()
+        public virtual Task SignOutAsync()
         {
+            return Task.CompletedTask;
+
             //todo for jwt
 
             //await Context.SignOutAsync(IdentityConstants.ApplicationScheme);
@@ -210,15 +210,6 @@ namespace Honamic.Identity.JwtAuthentication
             return _tokenFactoryService.CreateMfaTokenAsync(additionalClaims);
         }
 
-
-
-        /// <summary>
-        /// Validates the security stamp for the specified <paramref name="principal"/> against
-        /// the persisted stamp for the current user, as an asynchronous operation.
-        /// </summary>
-        /// <param name="principal">The principal whose stamp should be validated.</param>
-        /// <returns>The task object representing the asynchronous operation. The task will contain the <typeparamref name="TUser"/>
-        /// if the stamp matches the persisted value, otherwise it will return false.</returns>
         public virtual async Task ValidateSecurityStampAsync(TokenValidatedContext context)
         {
             if (context?.Principal == null)
@@ -235,14 +226,6 @@ namespace Honamic.Identity.JwtAuthentication
             context.Fail("Failed to validate.");
         }
 
-        /// <summary>
-        /// Validates the security stamp for the specified <paramref name="principal"/> from one of
-        /// the two factor principals (remember client or user id) against
-        /// the persisted stamp for the current user, as an asynchronous operation.
-        /// </summary>
-        /// <param name="principal">The principal whose stamp should be validated.</param>
-        /// <returns>The task object representing the asynchronous operation. The task will contain the <typeparamref name="TUser"/>
-        /// if the stamp matches the persisted value, otherwise it will return false.</returns>
         public virtual async Task<TUser> ValidateTwoFactorSecurityStampAsync(ClaimsPrincipal principal)
         {
             if (principal == null || principal.Identity?.Name == null)
@@ -258,18 +241,38 @@ namespace Honamic.Identity.JwtAuthentication
             return null;
         }
 
-        /// <summary>
-        /// Validates the security stamp for the specified <paramref name="user"/>.  If no user is specified, or if the store
-        /// does not support security stamps, validation is considered successful.
-        /// </summary>
-        /// <param name="user">The user whose stamp should be validated.</param>
-        /// <param name="securityStamp">The expected security stamp value.</param>
-        /// <returns>The result of the validation.</returns>
         public virtual async Task<bool> ValidateSecurityStampAsync(TUser user, string securityStamp)
             => user != null &&
             // Only validate the security stamp if the store supports it
             (!UserManager.SupportsUserSecurityStamp || securityStamp == await UserManager.GetSecurityStampAsync(user));
 
+        public virtual async Task<JwtSignInResult> RefreshTokenAsync(string refreshToken)
+        {
+            var result = _tokenFactoryService.ValidateAndGetRefreshTokenUserIdAndSecurity(refreshToken);
+
+            if (result.UserId == null || result.SecurityStamp == null)
+            {
+                return JwtSignInResult.Failed("invalid token");
+            }
+
+            var user = await UserManager.FindByIdAsync(result.UserId);
+
+            if (user == null || !await ValidateSecurityStampAsync(user, result.SecurityStamp))
+            {
+                return JwtSignInResult.Failed("token expired");
+            }
+
+            IList<Claim> additionalClaims = Array.Empty<Claim>();
+            
+            if (!string.IsNullOrEmpty(result.AmrCliam))
+            {
+                additionalClaims.Add(new Claim("amr", result.AmrCliam));
+            }
+          
+            var tokens = await SignInWithClaimsAsync(user, additionalClaims);
+
+            return JwtSignInResult.Success(tokens.Token, tokens.RefreshToken);
+        }
     }
 }
 

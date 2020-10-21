@@ -10,6 +10,6 @@ namespace Honamic.Identity.JwtAuthentication
 
         string CreateMfaTokenAsync(IEnumerable<Claim> claims);
 
-        public (string UserId, string SecurityStamp) ValidateAndGetRefreshTokenUserIdAndSecurity(string refreshToken);
+        public (string UserId, string SecurityStamp,string AmrCliam) ValidateAndGetRefreshTokenUserIdAndSecurity(string refreshToken);
     }
 }

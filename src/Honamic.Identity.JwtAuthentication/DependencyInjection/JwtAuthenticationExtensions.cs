@@ -71,7 +71,7 @@ namespace Microsoft.Extensions.DependencyInjection
             });
 
 
-            builder.AddJwtBearer("bearer.tfa", cfg =>
+            builder.AddJwtBearer(JwtAuthenticationOptions.JwtBearerTwoFactorsScheme, cfg =>
            {
                cfg.RequireHttpsMetadata = false;
                cfg.SaveToken = true;

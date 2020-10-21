@@ -20,13 +20,13 @@ namespace Honamic.Identity.JwtAuthentication
             var twoFactorInfo = RetrieveTwoFactorInfoAsync();
             if (twoFactorInfo == null || twoFactorInfo.UserId == null)
             {
-                return JwtSignInResult.Failed;
+                return JwtSignInResult.Failed();
             }
 
             var user = await UserManager.FindByIdAsync(twoFactorInfo.UserId);
             if (user == null)
             {
-                return JwtSignInResult.Failed;
+                return JwtSignInResult.Failed();
             }
 
             var error = await PreSignInCheck(user);
@@ -43,7 +43,7 @@ namespace Honamic.Identity.JwtAuthentication
             // If the token is incorrect, record the failure which also may cause the user to be locked out
             await UserManager.AccessFailedAsync(user);
 
-            return JwtSignInResult.Failed;
+            return JwtSignInResult.Failed();
         }
 
         public virtual async Task<JwtSignInResult> TwoFactorRecoveryCodeSignInAsync(string recoveryCode)
@@ -51,13 +51,13 @@ namespace Honamic.Identity.JwtAuthentication
             var twoFactorInfo = RetrieveTwoFactorInfoAsync();
             if (twoFactorInfo == null || twoFactorInfo.UserId == null)
             {
-                return JwtSignInResult.Failed;
+                return JwtSignInResult.Failed();
             }
 
             var user = await UserManager.FindByIdAsync(twoFactorInfo.UserId);
             if (user == null)
             {
-                return JwtSignInResult.Failed;
+                return JwtSignInResult.Failed();
             }
 
             var result = await UserManager.RedeemTwoFactorRecoveryCodeAsync(user, recoveryCode);
@@ -67,7 +67,7 @@ namespace Honamic.Identity.JwtAuthentication
             }
 
             // We don't protect against brute force attacks since codes are expected to be random.
-            return JwtSignInResult.Failed;
+            return JwtSignInResult.Failed();
         }
 
         private TwoFactorAuthenticationInfo RetrieveTwoFactorInfoAsync()
@@ -138,12 +138,12 @@ namespace Honamic.Identity.JwtAuthentication
             var twoFactorInfo = RetrieveTwoFactorInfoAsync();
             if (twoFactorInfo == null || twoFactorInfo.UserId == null)
             {
-                return JwtSignInResult.Failed;
+                return JwtSignInResult.Failed();
             }
             var user = await UserManager.FindByIdAsync(twoFactorInfo.UserId);
             if (user == null)
             {
-                return JwtSignInResult.Failed;
+                return JwtSignInResult.Failed();
             }
 
             var error = await PreSignInCheck(user);
@@ -157,7 +157,7 @@ namespace Honamic.Identity.JwtAuthentication
             }
             // If the token is incorrect, record the failure which also may cause the user to be locked out
             await UserManager.AccessFailedAsync(user);
-            return JwtSignInResult.Failed;
+            return JwtSignInResult.Failed();
         }
 
         public virtual async Task<TUser> GetTwoFactorAuthenticationUserAsync()

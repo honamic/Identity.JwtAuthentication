@@ -3,97 +3,45 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Honamic.Identity.JwtAuthentication.Sample.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    public class AuthController : AuthController<IdentityUser>
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly JwtSignInManager<IdentityUser> _jwtSignInManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly ILogger<AuthController> _logger;
-
         public AuthController(SignInManager<IdentityUser> signInManager,
-            ILogger<AuthController> logger,
+            ILogger<AuthController<IdentityUser>> logger,
             UserManager<IdentityUser> userManager,
-            JwtSignInManager<IdentityUser> jwtSignInManager)
+            JwtSignInManager<IdentityUser> jwtSignInManager) :
+            base(signInManager, logger, userManager, jwtSignInManager)
         {
-            _userManager = userManager;
-            _jwtSignInManager = jwtSignInManager;
-            _signInManager = signInManager;
-            _logger = logger;
-        }
 
-        [HttpPost("[action]")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginViewModel model)
-        {
-            var result = await _jwtSignInManager.PasswordSignInAsync(
-                model.Email,
-                model.Password,
-                isPersistent: false,
-                lockoutOnFailure: false);
-
-            return Ok(result);
         }
 
         [HttpGet("[action]")]
-        [Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public IActionResult UserInfo()
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", Identity.Application")]
+        public IActionResult SimultaneousCookieAndJwtSupportTest()
         {
-            return Ok(this.HttpContext.User.Identity.Name);
+            return Ok(GetCurrentUserInfo());
         }
 
         [HttpGet("[action]")]
-        [Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", Identity.Application")]
-        public IActionResult UserAdmin()
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public IActionResult MyUserInfoTest()
         {
-            return Ok(this.HttpContext.User.Identity.Name);
+            return Ok(GetCurrentUserInfo());
         }
 
-        [HttpGet("[action]")]
-        [Authorize(AuthenticationSchemes = "bearer.mfa")]
-        public async Task<IActionResult> TwoFactorProviders()
+        private object GetCurrentUserInfo()
         {
-            var user = await _jwtSignInManager.GetTwoFactorAuthenticationUserAsync();
-
-            if (user != null)
+            return new
             {
-                var list = await _userManager.GetValidTwoFactorProvidersAsync(user);
+                HttpContext.User.Identity.Name,
+                claims = HttpContext.User.Claims.Select(c => new { c.Type, c.Value })
+            };
 
-                return Ok(list);
-            }
-
-            return Unauthorized();
-        }
-
-        [HttpGet("[action]")]
-        [Authorize(AuthenticationSchemes = "bearer.mfa")]
-        public async Task<IActionResult> SendCode(string provider)
-        {
-            var user = await _jwtSignInManager.GetTwoFactorAuthenticationUserAsync();
-
-            var code = await _userManager.GenerateTwoFactorTokenAsync(user, provider);
-
-            if (code != null)
-            {
-
-                return Ok(code);
-            }
-
-            return NotFound();
-        }
-
-        [HttpGet("[action]")]
-        [Authorize(AuthenticationSchemes = "bearer.mfa")]
-        public async Task<IActionResult> TwoFactorSignIn(string provider, string code)
-        {
-            var result = await _jwtSignInManager.TwoFactorSignInAsync(provider, code, false);
-             
-            return Ok(result);
         }
     }
 }

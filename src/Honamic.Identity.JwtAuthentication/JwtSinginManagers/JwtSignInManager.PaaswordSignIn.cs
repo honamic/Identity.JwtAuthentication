@@ -16,7 +16,7 @@ namespace Honamic.Identity.JwtAuthentication
 
             if (user == null)
             {
-                return JwtSignInResult.Failed;
+                return JwtSignInResult.Failed();
             }
 
             var attempt = await CheckPasswordSignInAsync(user, password, lockoutOnFailure);
@@ -66,7 +66,7 @@ namespace Honamic.Identity.JwtAuthentication
                     return await LockedOut(user);
                 }
             }
-            return JwtSignInResult.Failed;
+            return JwtSignInResult.Failed();
         }
     }
 }

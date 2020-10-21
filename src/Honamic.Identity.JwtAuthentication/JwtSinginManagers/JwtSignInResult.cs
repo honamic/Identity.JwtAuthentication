@@ -22,12 +22,17 @@ namespace Honamic.Identity.JwtAuthentication
 
         public string TwoFactorToken { get; protected set; }
 
+        public string Message { get; protected set; }
+
         public static JwtSignInResult Success(string token, string refreshToken)
         {
             return new JwtSignInResult { Succeeded = true, Token = token, RefreshToken = refreshToken };
         }
 
-        public static JwtSignInResult Failed => _failed;
+        public static JwtSignInResult Failed(string message = null)
+        {
+            return new JwtSignInResult { Message = message };
+        }
 
         public static JwtSignInResult LockedOut => _lockedOut;
 
