@@ -23,7 +23,9 @@ namespace Microsoft.Extensions.DependencyInjection
 
             builder.Services.TryAddScoped<ITokenFactoryService<TUser>, TokenFactoryService<TUser>>();
 
-            builder.Services.Configure<JwtAuthenticationOptions>(options => configuration.GetSection(nameof(JwtAuthenticationOptions)).Bind(options));
+            builder.Services.AddOptions<JwtAuthenticationOptions>()
+                .Bind(configuration.GetSection(nameof(JwtAuthenticationOptions)))
+                .ValidateDataAnnotations();
 
             var bearerTokensOptions = configuration.GetSection(nameof(JwtAuthenticationOptions)).Get<JwtAuthenticationOptions>();
 
@@ -35,7 +37,8 @@ namespace Microsoft.Extensions.DependencyInjection
                 {
                     ValidIssuer = bearerTokensOptions.Issuer,
                     ValidAudience = bearerTokensOptions.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(bearerTokensOptions.Key)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(bearerTokensOptions.SigningKey)),
+                    TokenDecryptionKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(bearerTokensOptions.EncrtyptKey)),
                     ValidateIssuerSigningKey = true,
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromSeconds(bearerTokensOptions.ClockSkewSeconds),
@@ -79,7 +82,8 @@ namespace Microsoft.Extensions.DependencyInjection
                {
                    ValidIssuer = bearerTokensOptions.Issuer,
                    ValidAudience = bearerTokensOptions.Audience,
-                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(bearerTokensOptions.Key)),
+                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(bearerTokensOptions.SigningKey)),
+                   TokenDecryptionKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(bearerTokensOptions.EncrtyptKey)),
                    ValidateIssuerSigningKey = true,
                    ValidateLifetime = true,
                    ClockSkew = TimeSpan.FromSeconds(bearerTokensOptions.ClockSkewSeconds),

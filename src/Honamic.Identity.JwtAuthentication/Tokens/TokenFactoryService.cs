@@ -90,7 +90,8 @@ namespace Honamic.Identity.JwtAuthentication
                         RequireExpirationTime = true,
                         ValidateIssuer = false,
                         ValidateAudience = false,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.Key)),
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.SigningKey)),
+                        TokenDecryptionKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.EncrtyptKey)),
                         ValidateIssuerSigningKey = true, // verify signature to avoid tampering
                         ValidateLifetime = true, // validate the expiration
                         ClockSkew = TimeSpan.FromSeconds(_configuration.Value.ClockSkewSeconds) // tolerance for the expiration date
@@ -120,18 +121,35 @@ namespace Honamic.Identity.JwtAuthentication
 
         private string CreateToken(IEnumerable<Claim> claims, int expirationMinutes)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.Key));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var now = DateTime.UtcNow;
-            var token = new JwtSecurityToken(
-                issuer: _configuration.Value.Issuer,
-                audience: _configuration.Value.Audience,
-                claims: claims,
-                notBefore: now,
-                expires: now.AddMinutes(expirationMinutes),
-                signingCredentials: creds);
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.SigningKey));
+            var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            EncryptingCredentials encryptCredentials = null;
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            if (!string.IsNullOrEmpty(_configuration.Value.EncrtyptKey))
+            {
+                var encryptionkey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.EncrtyptKey));
+                encryptCredentials = new EncryptingCredentials(encryptionkey, SecurityAlgorithms.Aes128KW, SecurityAlgorithms.Aes128CbcHmacSha256);
+            }
+
+            var now = DateTime.UtcNow;
+
+            var descriptor = new SecurityTokenDescriptor
+            {
+                Issuer = _configuration.Value.Issuer,
+                Audience = _configuration.Value.Audience,
+                IssuedAt = now,
+                NotBefore = now,
+                Expires = now.AddMinutes(expirationMinutes),
+                SigningCredentials = signingCredentials,
+                EncryptingCredentials = encryptCredentials,
+                Subject = new ClaimsIdentity(claims)
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var securityToken = tokenHandler.CreateToken(descriptor);
+            var encryptedJwt = tokenHandler.WriteToken(securityToken);
+
+            return encryptedJwt;
         }
 
         private void AddIssuClaims(List<Claim> cliams)

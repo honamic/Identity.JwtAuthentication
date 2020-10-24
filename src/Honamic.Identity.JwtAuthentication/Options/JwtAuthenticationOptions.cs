@@ -15,7 +15,11 @@ namespace Honamic.Identity.JwtAuthentication
         }
 
         [Required]
-        public string Key { set; get; }
+        [MinLength(16)]
+        public string SigningKey { set; get; }
+
+        [StringLength(16, MinimumLength = 16)]
+        public string EncrtyptKey { set; get; }
 
         [Required]
         public string Issuer { set; get; }
