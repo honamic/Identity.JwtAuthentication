@@ -84,7 +84,7 @@ namespace Honamic.Identity.JwtAuthentication
                 }
                 else
                 {
-                    return StatusCode(500,"send code failed");
+                    return StatusCode(500, "send code failed");
                 }
             }
 
@@ -100,6 +100,14 @@ namespace Honamic.Identity.JwtAuthentication
             return Ok(result);
         }
 
+        [HttpPost("[action]")]
+        [Authorize(AuthenticationSchemes = JwtAuthenticationOptions.JwtBearerTwoFactorsScheme)]
+        public async Task<IActionResult> LoginWithRecoveryCode(LoginWithRecoveryCodeViewModel model)
+        {
+            var result = await _jwtSignInManager.TwoFactorRecoveryCodeSignInAsync(model.RecoveryCode);
+
+            return Ok(result);
+        }
 
         protected abstract Task<bool> SendTwoFactureCodeAsync(TUser user, string code, string provider);
     }
