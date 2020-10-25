@@ -1,0 +1,31 @@
+name: .NET Core
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore: 
+    - 'README.md'
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+    - 'README.md'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.403
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build ./src/Honamic.Identity.JwtAuthentication/Honamic.Identity.JwtAuthentication.csproj --configuration Release --no-restore
+    - name: Test
+      run: dotnet test ./src/Honamic.Identity.JwtAuthentication.Test/Honamic.Identity.JwtAuthentication.Test.csproj --no-restore --verbosity normal
+    - name: Deploy NuGet Package
+      run: dotnet nuget push ./src/Honamic.Identity.JwtAuthentication/bin/Release/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
