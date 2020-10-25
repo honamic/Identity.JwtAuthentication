@@ -1,7 +1,7 @@
-# JwtAuthentication
+# Identity.JwtAuthentication
 <p align="left">
-  <a href="https://github.com/honamic/JwtAuthentication">
-     <img alt="GitHub Actions status" src="https://github.com/honamic/JwtAuthentication/workflows/.NET%20Core/badge.svg">
+  <a href="https://github.com/honamic/Identity.JwtAuthentication">
+     <img alt="GitHub Actions status" src="https://github.com/honamic/Identity.JwtAuthentication/workflows/.NET%20Core/badge.svg">
     
   </a>
   <a href="https://www.nuget.org/packages/Honamic.Identity.JwtAuthentication/">

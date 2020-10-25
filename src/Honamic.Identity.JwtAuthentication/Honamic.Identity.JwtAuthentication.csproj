@@ -5,7 +5,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Version>1.0.0-Alpha1</Version>
 		<Company>Honamic</Company>
-		<PackageProjectUrl>https://github.com/honamic/redirector</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/honamic/Identity.JwtAuthentication</PackageProjectUrl>
 		<Description>JWT Authentication Plugin for Asp.Net Core Identity</Description>
 		<PackageTags>Authentication;Identity;Json Web Token;JWT</PackageTags>
 	</PropertyGroup>
