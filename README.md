@@ -9,4 +9,4 @@
   </a>
 </p>
 
-JWT Authentication extension for Asp.Net Core Identity
+JWT Authentication Plugin for Asp.Net Core Identity
