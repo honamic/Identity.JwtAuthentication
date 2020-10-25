@@ -83,7 +83,7 @@ namespace Honamic.Identity.JwtAuthentication
             return await UserManager.FindByIdAsync(info.UserId);
         }
 
-        protected virtual async Task<string> RememberTwoFactorClientAsync(TUser user)
+        public virtual Task<string> RememberTwoFactorClientAsync(TUser user)
         {
             throw new NotSupportedException("RememberTwoFactor");
 

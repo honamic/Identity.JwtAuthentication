@@ -17,14 +17,14 @@ namespace Honamic.Identity.JwtAuthentication
         #region ctor
 
         private readonly IUserClaimsPrincipalFactory<TUser> _userClaimsPrincipalFactory;
-        private readonly IOptionsSnapshot<JwtAuthenticationOptions> _configuration;
+        private readonly IOptions<JwtAuthenticationOptions> _configuration;
         private readonly IOptions<IdentityOptions> _identityOptions;
         private readonly ILogger<TokenFactoryService<TUser>> _logger;
         private readonly string _securityStampClaimType = "";
         private readonly string _userIdClaimType = "";
 
         public TokenFactoryService(IUserClaimsPrincipalFactory<TUser> userClaimsPrincipalFactory,
-            IOptionsSnapshot<JwtAuthenticationOptions> configuration,
+            IOptions<JwtAuthenticationOptions> configuration,
             IOptions<IdentityOptions> identityOptions,
             ILogger<TokenFactoryService<TUser>> logger)
         {

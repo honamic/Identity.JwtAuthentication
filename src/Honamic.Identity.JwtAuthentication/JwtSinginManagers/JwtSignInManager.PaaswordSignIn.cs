@@ -6,18 +6,22 @@ namespace Honamic.Identity.JwtAuthentication
 {
     public partial class JwtSignInManager<TUser>
     {
-        public virtual async Task<JwtSignInResult> PasswordSignInAsync(string userName,
-            string password,
-            bool isPersistent,
-            bool lockoutOnFailure
-            )
+        public virtual async Task<JwtSignInResult> PasswordSignInAsync(string userName, string password, bool isPersistent, bool lockoutOnFailure)
         {
-            var user = await UserManager.FindByNameAsync(userName);
-
-            if (user == null)
+            TUser val = await UserManager.FindByNameAsync(userName);
+            if (val == null)
             {
                 return JwtSignInResult.Failed();
             }
+            return await PasswordSignInAsync(val, password, isPersistent, lockoutOnFailure);
+        }
+
+        public virtual async Task<JwtSignInResult> PasswordSignInAsync(TUser user, string password, bool isPersistent, bool lockoutOnFailure)
+        {
+            if (user == null)
+            {
+                throw new ArgumentNullException("user");
+            }          
 
             var attempt = await CheckPasswordSignInAsync(user, password, lockoutOnFailure);
 

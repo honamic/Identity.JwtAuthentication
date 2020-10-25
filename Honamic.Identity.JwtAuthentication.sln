@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Honamic.Identity.JwtAuthent
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Honamic.Identity.JwtAuthentication.Sample", "src\Honamic.Identity.JwtAuthentication.Sample\Honamic.Identity.JwtAuthentication.Sample.csproj", "{0602978F-6C47-4792-BE81-A4EA65F5D66A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Honamic.Identity.JwtAuthentication.Test", "src\Honamic.Identity.JwtAuthentication.Test\Honamic.Identity.JwtAuthentication.Test.csproj", "{AE125789-1275-4562-89BE-1179D325173C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{0602978F-6C47-4792-BE81-A4EA65F5D66A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0602978F-6C47-4792-BE81-A4EA65F5D66A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0602978F-6C47-4792-BE81-A4EA65F5D66A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE125789-1275-4562-89BE-1179D325173C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE125789-1275-4562-89BE-1179D325173C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE125789-1275-4562-89BE-1179D325173C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE125789-1275-4562-89BE-1179D325173C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

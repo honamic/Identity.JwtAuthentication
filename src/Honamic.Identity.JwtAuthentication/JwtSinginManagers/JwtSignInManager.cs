@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("Honamic.Identity.JwtAuthentication.Test")]
 
 namespace Honamic.Identity.JwtAuthentication
 {
@@ -16,7 +17,7 @@ namespace Honamic.Identity.JwtAuthentication
         public JwtSignInManager(UserManager<TUser> userManager,
             IHttpContextAccessor contextAccessor,
             IOptions<IdentityOptions> optionsAccessor,
-            ILogger<SignInManager<TUser>> logger,
+            ILogger<JwtSignInManager<TUser>> logger,
             IAuthenticationSchemeProvider schemes,
             IUserConfirmation<TUser> confirmation,
             ITokenFactoryService<TUser> tokenFactoryService)
