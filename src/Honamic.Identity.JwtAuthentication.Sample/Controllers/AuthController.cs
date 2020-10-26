@@ -11,11 +11,11 @@ namespace Honamic.Identity.JwtAuthentication.Sample.Controllers
     [Route("api/[controller]")]
     public class AuthController : AuthController<IdentityUser>
     {
-        public AuthController(SignInManager<IdentityUser> signInManager,
-            ILogger<AuthController<IdentityUser>> logger,
+        public AuthController(JwtSignInManager<IdentityUser> jwtSignInManager,
             UserManager<IdentityUser> userManager,
-            JwtSignInManager<IdentityUser> jwtSignInManager) :
-            base(signInManager, logger, userManager, jwtSignInManager)
+            ILogger<AuthController<IdentityUser>> logger
+            ) :
+            base(jwtSignInManager, userManager, logger)
         {
 
         }

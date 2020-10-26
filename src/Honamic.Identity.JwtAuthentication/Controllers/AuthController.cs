@@ -11,23 +11,21 @@ namespace Honamic.Identity.JwtAuthentication
     {
         protected readonly UserManager<TUser> _userManager;
         protected readonly JwtSignInManager<TUser> _jwtSignInManager;
-        protected readonly SignInManager<TUser> _signInManager;
         protected readonly ILogger<AuthController<TUser>> _logger;
 
-        public AuthController(SignInManager<TUser> signInManager,
-            ILogger<AuthController<TUser>> logger,
+        public AuthController(JwtSignInManager<TUser> jwtSignInManager,
             UserManager<TUser> userManager,
-            JwtSignInManager<TUser> jwtSignInManager)
+            ILogger<AuthController<TUser>> logger
+            )
         {
             _userManager = userManager;
             _jwtSignInManager = jwtSignInManager;
-            _signInManager = signInManager;
             _logger = logger;
         }
 
         [HttpPost("[action]")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginViewModel model)
+        public virtual async Task<IActionResult> Login([FromBody] LoginViewModel model)
         {
             var result = await _jwtSignInManager.PasswordSignInAsync(
                 model.Email,
@@ -40,7 +38,7 @@ namespace Honamic.Identity.JwtAuthentication
 
         [HttpPost("[action]")]
         [AllowAnonymous]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenViewModel model)
+        public virtual async Task<IActionResult> RefreshToken([FromBody] RefreshTokenViewModel model)
         {
             if (model == null)
             {
@@ -54,7 +52,7 @@ namespace Honamic.Identity.JwtAuthentication
 
         [HttpGet("[action]")]
         [Authorize(AuthenticationSchemes = JwtAuthenticationOptions.JwtBearerTwoFactorsScheme)]
-        public async Task<IActionResult> TwoFactorProviders()
+        public virtual async Task<IActionResult> TwoFactorProviders()
         {
             var user = await _jwtSignInManager.GetTwoFactorAuthenticationUserAsync();
 
@@ -70,7 +68,7 @@ namespace Honamic.Identity.JwtAuthentication
 
         [HttpPost("[action]")]
         [Authorize(AuthenticationSchemes = JwtAuthenticationOptions.JwtBearerTwoFactorsScheme)]
-        public async Task<IActionResult> SendCode(string provider)
+        public virtual async Task<IActionResult> SendCode(string provider)
         {
             var user = await _jwtSignInManager.GetTwoFactorAuthenticationUserAsync();
 
@@ -93,7 +91,7 @@ namespace Honamic.Identity.JwtAuthentication
 
         [HttpPost("[action]")]
         [Authorize(AuthenticationSchemes = JwtAuthenticationOptions.JwtBearerTwoFactorsScheme)]
-        public async Task<IActionResult> TwoFactorSignIn(string provider, string code)
+        public virtual async Task<IActionResult> TwoFactorSignIn(string provider, string code)
         {
             var result = await _jwtSignInManager.TwoFactorSignInAsync(provider, code, false);
 
@@ -102,7 +100,7 @@ namespace Honamic.Identity.JwtAuthentication
 
         [HttpPost("[action]")]
         [Authorize(AuthenticationSchemes = JwtAuthenticationOptions.JwtBearerTwoFactorsScheme)]
-        public async Task<IActionResult> LoginWithRecoveryCode(LoginWithRecoveryCodeViewModel model)
+        public virtual async Task<IActionResult> LoginWithRecoveryCode(LoginWithRecoveryCodeViewModel model)
         {
             var result = await _jwtSignInManager.TwoFactorRecoveryCodeSignInAsync(model.RecoveryCode);
 
