@@ -91,7 +91,7 @@ namespace Honamic.Identity.JwtAuthentication
                         ValidateIssuer = false,
                         ValidateAudience = false,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.SigningKey)),
-                        TokenDecryptionKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.EncrtyptKey)),
+                        TokenDecryptionKey = string.IsNullOrEmpty(_configuration.Value.EncrtyptKey) ? null : new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.EncrtyptKey)),
                         ValidateIssuerSigningKey = true, // verify signature to avoid tampering
                         ValidateLifetime = true, // validate the expiration
                         ClockSkew = TimeSpan.FromSeconds(_configuration.Value.ClockSkewSeconds) // tolerance for the expiration date
