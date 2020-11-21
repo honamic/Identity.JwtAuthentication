@@ -263,13 +263,18 @@ namespace Honamic.Identity.JwtAuthentication
                 return JwtSignInResult.Failed("token expired");
             }
 
-            IList<Claim> additionalClaims = Array.Empty<Claim>();
-            
+            IList<Claim> additionalClaims;
             if (!string.IsNullOrEmpty(result.AmrCliam))
             {
+                additionalClaims = new List<Claim>();
+
                 additionalClaims.Add(new Claim("amr", result.AmrCliam));
             }
-          
+            else
+            {
+                additionalClaims = Array.Empty<Claim>();
+            }
+
             var tokens = await SignInWithClaimsAsync(user, additionalClaims);
 
             return JwtSignInResult.Success(tokens.Token, tokens.RefreshToken);
