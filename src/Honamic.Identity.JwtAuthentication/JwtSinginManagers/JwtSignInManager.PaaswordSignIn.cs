@@ -56,7 +56,7 @@ namespace Honamic.Identity.JwtAuthentication
                     await ResetLockout(user);
                 }
 
-                return JwtSignInResult.Success(null, null);
+                return JwtSignInResult.Success(null);
             }
 
             Logger.LogWarning(2, "User failed to provide the correct password.");

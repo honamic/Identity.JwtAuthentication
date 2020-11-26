@@ -145,8 +145,8 @@ namespace Honamic.Identity.JwtAuthentication.Test
 
             // Assert
             Assert.True(result.Succeeded);
-            Assert.True(VerifyToken(result.Token, user.Id, isPersistent, loginProvider: null, amr: "pwd"));
-            Assert.True(VerifyRefreshToken(result.RefreshToken, user.Id, isPersistent, loginProvider: null, amr: "pwd"));
+            Assert.True(VerifyToken(result.Tokens.Token, user.Id, isPersistent, loginProvider: null, amr: "pwd"));
+            Assert.True(VerifyRefreshToken(result.Tokens.RefreshToken, user.Id, isPersistent, loginProvider: null, amr: "pwd"));
 
             manager.Verify();
         }
@@ -208,8 +208,8 @@ namespace Honamic.Identity.JwtAuthentication.Test
             // Assert
             Assert.True(result.Succeeded);
             manager.Verify();
-            Assert.True(VerifyToken(result.Token, user.Id, null, loginProvider: null, amr: "pwd"));
-            Assert.True(VerifyRefreshToken(result.RefreshToken, user.Id, null, loginProvider: null, amr: "pwd"));
+            Assert.True(VerifyToken(result.Tokens.Token, user.Id, null, loginProvider: null, amr: "pwd"));
+            Assert.True(VerifyRefreshToken(result.Tokens.RefreshToken, user.Id, null, loginProvider: null, amr: "pwd"));
         }
 
 

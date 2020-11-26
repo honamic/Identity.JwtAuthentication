@@ -39,7 +39,7 @@ namespace Honamic.Identity.JwtAuthentication
 
         #endregion
 
-        public async Task<(string Token, string RefreshToken)> CreateJwtTokensAsync(TUser user, IEnumerable<Claim> additionalClaims)
+        public async Task<CreateJwtTokenResult> CreateJwtTokensAsync(TUser user, IEnumerable<Claim> additionalClaims)
         {
             var userPrincipal = await _userClaimsPrincipalFactory.CreateAsync(user);
 
@@ -52,6 +52,7 @@ namespace Honamic.Identity.JwtAuthentication
 
             AddIssuClaims(cliams);
 
+
             var token = CreateToken(cliams, _configuration.Value.AccessTokenExpirationMinutes);
 
             var refreshClaims = cliams.Where(t => t.Type == _userIdClaimType || t.Type == _securityStampClaimType || t.Type == "amr").ToList();
@@ -60,13 +61,20 @@ namespace Honamic.Identity.JwtAuthentication
 
             var refreshToken = CreateToken(refreshClaims, _configuration.Value.RefreshTokenExpirationMinutes);
 
+            var tokenResult = new CreateJwtTokenResult
+            {
+                Token = token.Token,
+                TokenExpirationTime = token.Expires,
+                RefreshToken = refreshToken.Token,
+                RefreshTokenExpirationTime = refreshToken.Expires,
+            };
 
-            return (token, refreshToken);
+            return tokenResult;
         }
 
         public string CreateMfaTokenAsync(IEnumerable<Claim> claims)
         {
-            return CreateToken(claims, _configuration.Value.MfaTokenExpirationMinutes);
+            return CreateToken(claims, _configuration.Value.MfaTokenExpirationMinutes).Token;
         }
 
         public (string UserId, string SecurityStamp, string AmrCliam) ValidateAndGetRefreshTokenUserIdAndSecurity(string refreshToken)
@@ -119,7 +127,7 @@ namespace Honamic.Identity.JwtAuthentication
             return (userId, securityStamp, amrCliam);
         }
 
-        private string CreateToken(IEnumerable<Claim> claims, int expirationMinutes)
+        private (string Token, DateTimeOffset Expires) CreateToken(IEnumerable<Claim> claims, int expirationMinutes)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Value.SigningKey));
             var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -132,6 +140,7 @@ namespace Honamic.Identity.JwtAuthentication
             }
 
             var now = DateTime.UtcNow;
+            var expires = now.AddMinutes(expirationMinutes);
 
             var descriptor = new SecurityTokenDescriptor
             {
@@ -139,7 +148,7 @@ namespace Honamic.Identity.JwtAuthentication
                 Audience = _configuration.Value.Audience,
                 IssuedAt = now,
                 NotBefore = now,
-                Expires = now.AddMinutes(expirationMinutes),
+                Expires = expires,
                 SigningCredentials = signingCredentials,
                 EncryptingCredentials = encryptCredentials,
                 Subject = new ClaimsIdentity(claims)
@@ -149,7 +158,7 @@ namespace Honamic.Identity.JwtAuthentication
             var securityToken = tokenHandler.CreateToken(descriptor);
             var encryptedJwt = tokenHandler.WriteToken(securityToken);
 
-            return encryptedJwt;
+            return (encryptedJwt, expires);
         }
 
         private void AddIssuClaims(List<Claim> cliams)

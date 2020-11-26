@@ -97,19 +97,19 @@ namespace Honamic.Identity.JwtAuthentication
                 // await Context.SignOutAsync(IdentityConstants.ExternalScheme);
             }
 
-            (string Token, string RefreshToken) tokens;
+            CreateJwtTokenResult createJwtTokenResult;
 
             if (loginProvider == null)
             {
-                tokens = await SignInWithClaimsAsync(user, new Claim[] { new Claim("amr", "pwd") });
+                createJwtTokenResult = await SignInWithClaimsAsync(user, new Claim[] { new Claim("amr", "pwd") });
             }
             else
             {
                 IList<Claim> additionalClaims = Array.Empty<Claim>();
-                tokens = await SignInWithClaimsAsync(user, additionalClaims);
+                createJwtTokenResult = await SignInWithClaimsAsync(user, additionalClaims);
             }
 
-            return JwtSignInResult.Success(tokens.Token, tokens.RefreshToken);
+            return JwtSignInResult.Success(createJwtTokenResult);
         }
 
         private async Task<bool> IsTfaEnabled(TUser user)
@@ -128,7 +128,7 @@ namespace Honamic.Identity.JwtAuthentication
             return (result != null && result.Principal.FindFirstValue(ClaimTypes.Name) == userId);
         }
 
-        public virtual async Task<(string Token, string RefreshToken)> SignInWithClaimsAsync(TUser user, IEnumerable<Claim> additionalClaims)
+        public virtual async Task<CreateJwtTokenResult> SignInWithClaimsAsync(TUser user, IEnumerable<Claim> additionalClaims)
         {
             return await _tokenFactoryService.CreateJwtTokensAsync(user, additionalClaims);
         }
@@ -277,7 +277,7 @@ namespace Honamic.Identity.JwtAuthentication
 
             var tokens = await SignInWithClaimsAsync(user, additionalClaims);
 
-            return JwtSignInResult.Success(tokens.Token, tokens.RefreshToken);
+            return JwtSignInResult.Success(tokens);
         }
     }
 }

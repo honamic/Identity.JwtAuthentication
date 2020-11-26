@@ -16,17 +16,18 @@ namespace Honamic.Identity.JwtAuthentication
 
         public bool RequiresTwoFactor { get; protected set; }
 
-        public string Token { get; protected set; }
-
-        public string RefreshToken { get; protected set; }
+        public CreateJwtTokenResult Tokens { get; protected set; }
 
         public string TwoFactorToken { get; protected set; }
 
         public string Message { get; protected set; }
 
-        public static JwtSignInResult Success(string token, string refreshToken)
+        public static JwtSignInResult Success(CreateJwtTokenResult tokenResult)
         {
-            return new JwtSignInResult { Succeeded = true, Token = token, RefreshToken = refreshToken };
+            return new JwtSignInResult { 
+                Succeeded = true,
+                Tokens = tokenResult
+            };
         }
 
         public static JwtSignInResult Failed(string message = null)

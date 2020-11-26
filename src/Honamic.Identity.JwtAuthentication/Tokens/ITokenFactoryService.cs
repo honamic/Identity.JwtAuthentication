@@ -6,7 +6,7 @@ namespace Honamic.Identity.JwtAuthentication
 {
     public interface ITokenFactoryService<TUser> where TUser : class
     {
-        Task<(string Token, string RefreshToken)> CreateJwtTokensAsync(TUser user, IEnumerable<Claim> additionalClaims);
+        Task<CreateJwtTokenResult> CreateJwtTokensAsync(TUser user, IEnumerable<Claim> additionalClaims);
 
         string CreateMfaTokenAsync(IEnumerable<Claim> claims);
 

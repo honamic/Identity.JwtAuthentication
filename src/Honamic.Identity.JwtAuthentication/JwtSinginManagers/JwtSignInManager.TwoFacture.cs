@@ -137,7 +137,7 @@ namespace Honamic.Identity.JwtAuthentication
 
             var tokens = await SignInWithClaimsAsync(user, claims);
 
-            return JwtSignInResult.Success(tokens.Token, tokens.RefreshToken);
+            return JwtSignInResult.Success(tokens);
         }
 
         internal async Task<ClaimsPrincipal> StoreRememberClient(TUser user)
