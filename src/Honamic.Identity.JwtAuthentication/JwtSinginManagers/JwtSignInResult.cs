@@ -5,8 +5,8 @@ namespace Honamic.Identity.JwtAuthentication
     public class JwtSignInResult
     {
         private static readonly JwtSignInResult _failed = new JwtSignInResult();
-        private static readonly JwtSignInResult _lockedOut = new JwtSignInResult { IsLockedOut = true };
-        private static readonly JwtSignInResult _notAllowed = new JwtSignInResult { IsNotAllowed = true };
+        private static readonly JwtSignInResult _lockedOut = new JwtSignInResult { IsLockedOut = true, Message = "User account locked out." };
+        private static readonly JwtSignInResult _notAllowed = new JwtSignInResult { IsNotAllowed = true, Message = "User cannot sign in without a confirmed account." };
 
         public bool Succeeded { get; protected set; }
 
@@ -24,7 +24,8 @@ namespace Honamic.Identity.JwtAuthentication
 
         public static JwtSignInResult Success(CreateJwtTokenResult tokenResult)
         {
-            return new JwtSignInResult { 
+            return new JwtSignInResult
+            {
                 Succeeded = true,
                 Tokens = tokenResult
             };

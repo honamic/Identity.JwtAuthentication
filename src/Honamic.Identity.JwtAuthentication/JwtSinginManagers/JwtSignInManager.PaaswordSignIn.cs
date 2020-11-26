@@ -11,7 +11,7 @@ namespace Honamic.Identity.JwtAuthentication
             TUser val = await UserManager.FindByNameAsync(userName);
             if (val == null)
             {
-                return JwtSignInResult.Failed();
+                return JwtSignInResult.Failed("invalid user name or password");
             }
             return await PasswordSignInAsync(val, password, isPersistent, lockoutOnFailure);
         }
